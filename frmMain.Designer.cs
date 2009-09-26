@@ -48,6 +48,7 @@
             this.cmdCommit = new System.Windows.Forms.ToolStripButton();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
+            this.addLuceneIndexToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -96,11 +97,12 @@
             this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.addReduceToolStripMenuItem,
             this.addViewToolStripMenuItem,
+            this.addLuceneIndexToolStripMenuItem,
             this.addDesignToolStripMenuItem,
             this.ctxSeparator,
             this.refreshToolStripMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(139, 98);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(169, 142);
             this.contextMenuStrip1.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip1_Opening);
             // 
             // addReduceToolStripMenuItem
@@ -144,6 +146,7 @@
             this.imageList1.Images.SetKeyName(1, "DataSet_TableView.bmp");
             this.imageList1.Images.SetKeyName(2, "Table.bmp");
             this.imageList1.Images.SetKeyName(3, "FormulaEvaluator.bmp");
+            this.imageList1.Images.SetKeyName(4, "Textbox.bmp");
             // 
             // rtSource
             // 
@@ -225,6 +228,13 @@
             this.toolStripStatusLabel1.Size = new System.Drawing.Size(118, 17);
             this.toolStripStatusLabel1.Text = "toolStripStatusLabel1";
             // 
+            // addLuceneIndexToolStripMenuItem
+            // 
+            this.addLuceneIndexToolStripMenuItem.Name = "addLuceneIndexToolStripMenuItem";
+            this.addLuceneIndexToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
+            this.addLuceneIndexToolStripMenuItem.Text = "Add Lucene Index";
+            this.addLuceneIndexToolStripMenuItem.Click += new System.EventHandler(this.addLuceneIndexToolStripMenuItem_Click);
+            // 
             // FrmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -235,7 +245,7 @@
             this.Controls.Add(this.splitContainer1);
             this.KeyPreview = true;
             this.Name = "FrmMain";
-            this.Text = "Couch Surfer";
+            this.Text = "LoveSeat";
             this.KeyUp += new System.Windows.Forms.KeyEventHandler(this.frmMain_KeyUp);
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
@@ -270,6 +280,7 @@
         private System.Windows.Forms.ToolStripLabel toolStripLabel1;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
+        private System.Windows.Forms.ToolStripMenuItem addLuceneIndexToolStripMenuItem;
     }
 }
 

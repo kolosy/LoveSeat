@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using Divan;
 using System.IO;
 using System.Security;
+using Divan.Lucene;
 
 namespace LoveSeat
 {
@@ -18,12 +19,18 @@ namespace LoveSeat
 @"function (keys, values, rereduce) {
     
 }";
+        const string IndexTemplate =
+@"function (doc) {
+    var ret = new Document();
+
+    return ret;
+}";
 
         private const string ConfigFile = "loveseat.config";
 
         TreeNode _contextNode;
         CouchServer _svr;
-        CouchViewDefinition _currentDefinition;
+        CouchViewDefinitionBase _currentDefinition;
         bool _isMap;
 
         /// <summary>
@@ -187,6 +194,21 @@ namespace LoveSeat
                 if (!String.IsNullOrEmpty(view.Reduce))
                     CreateFunctionNode(view, node, "reduce");
             }
+
+            foreach (var index in couchViewDefinition.LuceneDefinitions)
+            {
+                TreeNode node = CreateFTINode(parent, index);
+                CreateFunctionNode(index, node, "index");
+            }
+        }
+
+        private TreeNode CreateFTINode(TreeNode parent, Divan.Lucene.CouchLuceneViewDefinition index)
+        {
+            var node = parent.Nodes.Add(index.Name);
+            node.Tag = index;
+            node.ImageIndex = 4;
+            node.SelectedImageIndex = 4;
+            return node;
         }
 
         /// <summary>
@@ -213,7 +235,7 @@ namespace LoveSeat
         /// <param name="node">The node.</param>
         /// <param name="function">The name of the function.</param>
         /// <returns></returns>
-        private TreeNode CreateFunctionNode(CouchViewDefinition view, TreeNode node, string function)
+        private TreeNode CreateFunctionNode(CouchViewDefinitionBase view, TreeNode node, string function)
         {
             var functionNode = node.Nodes.Add(function, function);
             functionNode.Name = function;
@@ -255,8 +277,8 @@ namespace LoveSeat
                     if (!VerifySave(true))
                         return;
                     _isMap = true;
-                    _currentDefinition = (CouchViewDefinition)tvMain.SelectedNode.Tag;
-                    rtSource.Text = _currentDefinition.Map;
+                    _currentDefinition = (CouchViewDefinitionBase)tvMain.SelectedNode.Tag;
+                    rtSource.Text = ((CouchViewDefinition)_currentDefinition).Map;
 
                     if (String.IsNullOrEmpty(rtSource.Text))
                         rtSource.Text = MapTemplate;
@@ -266,11 +288,22 @@ namespace LoveSeat
                     if (!VerifySave(true))
                         return;
                     _isMap = false;
-                    _currentDefinition = (CouchViewDefinition)tvMain.SelectedNode.Tag;
-                    rtSource.Text = _currentDefinition.Reduce;
+                    _currentDefinition = (CouchViewDefinitionBase)tvMain.SelectedNode.Tag;
+                    rtSource.Text = ((CouchViewDefinition)_currentDefinition).Reduce;
 
                     if (String.IsNullOrEmpty(rtSource.Text))
                         rtSource.Text = ReduceTemplate;
+
+                    break;
+                case "index":
+                    if (!VerifySave(true))
+                        return;
+                    _isMap = false;
+                    _currentDefinition = (CouchViewDefinitionBase)tvMain.SelectedNode.Tag;
+                    rtSource.Text = ((CouchLuceneViewDefinition)_currentDefinition).Index;
+
+                    if (String.IsNullOrEmpty(rtSource.Text))
+                        rtSource.Text = IndexTemplate;
 
                     break;
             }
@@ -283,9 +316,12 @@ namespace LoveSeat
         /// <returns>whether the save occurred</returns>
         private bool VerifySave(bool prompt)
         {
-            if (_currentDefinition == null ||
-                (_isMap && (_currentDefinition.Map == rtSource.Text)) ||
-                (!_isMap && (_currentDefinition.Reduce == rtSource.Text)))
+            if (_currentDefinition == null || 
+                    (((_currentDefinition is CouchViewDefinition) &&
+                        ((_isMap && (((CouchViewDefinition)_currentDefinition).Map == rtSource.Text)) ||
+                        (!_isMap && (((CouchViewDefinition)_currentDefinition).Reduce == rtSource.Text)))) ||
+                    ((_currentDefinition is CouchLuceneViewDefinition) &&
+                        (((CouchLuceneViewDefinition)_currentDefinition).Index == rtSource.Text))))
             {
                 if (_currentDefinition != null)
                     toolStripStatusLabel1.Text = String.Format("{0} is up to date.", _currentDefinition.Name);
@@ -298,10 +334,16 @@ namespace LoveSeat
                 DialogResult.Yes)
             {
                 case DialogResult.Yes:
-                    if (_isMap)
-                        _currentDefinition.Map = rtSource.Text;
+                    if (_currentDefinition is CouchViewDefinition)
+                    {
+                        if (_isMap)
+                            ((CouchViewDefinition)_currentDefinition).Map = rtSource.Text;
+                        else
+                            ((CouchViewDefinition)_currentDefinition).Reduce = rtSource.Text;
+                    }
                     else
-                        _currentDefinition.Reduce = rtSource.Text;
+                        ((CouchLuceneViewDefinition)_currentDefinition).Index = rtSource.Text;
+
                     _currentDefinition.Doc.Synch();
                     toolStripStatusLabel1.Text = String.Format("Saved {0}.", _currentDefinition.Name);
                     break;
@@ -352,8 +394,12 @@ namespace LoveSeat
             addDesignToolStripMenuItem.Visible =
                 (_contextNode != null) &&
                 (_contextNode.Tag is CouchDatabase);
-            
+
             addViewToolStripMenuItem.Visible =
+                (_contextNode != null) &&
+                (_contextNode.Tag is CouchDesignDocument);
+
+            addLuceneIndexToolStripMenuItem.Visible =
                 (_contextNode != null) &&
                 (_contextNode.Tag is CouchDesignDocument);
 
@@ -407,6 +453,26 @@ namespace LoveSeat
             }
         }
 
+
+        private void addLuceneIndexToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (_contextNode == null)
+                return;
+
+            using (var dialog = new dlgName("Index name", "New Index"))
+            {
+                if (dialog.ShowDialog() != DialogResult.OK)
+                    return;
+
+                var view = ((CouchDesignDocument)_contextNode.Tag).AddLuceneView(dialog.EnteredName, String.Empty);
+
+                var viewNode = CreateFTINode(_contextNode, view);
+                var indexNode = CreateFunctionNode(view, viewNode, "index");
+
+                indexNode.EnsureVisible();
+            }
+        }
+        
         /// <summary>
         /// Handles the Click event of the refreshToolStripMenuItem control.
         /// </summary>
