@@ -6,6 +6,7 @@ using System.IO;
 using System.Security;
 using Divan.Lucene;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace LoveSeat
 {
@@ -542,6 +543,113 @@ namespace LoveSeat
             }
             else
                 settings = new Settings();
+        }
+
+        private void cmdResults_CheckedChanged(object sender, EventArgs e)
+        {
+            splitContainer2.Panel2Collapsed = !cmdResults.Checked;
+        }
+
+        private void cmdRun_Click(object sender, EventArgs e)
+        {
+            if (_currentDefinition == null)
+                return;
+
+            if (!VerifySave(true))
+            {
+                toolStripStatusLabel1.Text = "Command aborted";
+                return;
+            }
+
+            var viewDefinition = _currentDefinition as CouchViewDefinition;
+            tvResults.Nodes.Clear();
+
+            var root = tvResults.Nodes.Add(viewDefinition.Path() + "/" + txtParams.Text);
+
+            if (viewDefinition == null)
+            {
+                var luceneDefinition = _currentDefinition as CouchLuceneViewDefinition;
+                var luceneQuery = luceneDefinition.Query();
+                if (!String.IsNullOrEmpty(txtParams.Text))
+                    foreach (var optionSet in txtParams.Text.Split('&'))
+                    {
+                        var option = optionSet.Split('&');
+                        luceneQuery.Options[option[0]] = option[1];
+                    }
+
+                try
+                {
+                    ShowResult(root, luceneQuery.GetResult().result, null);
+                }
+                catch (Exception ex)
+                {
+                    root.Nodes.Add("Error: " + ex.Message);
+                    MessageBox.Show(ex.ToString(), "Exception running view", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            else
+            {
+                var viewQuery = viewDefinition.Query();
+                if (!String.IsNullOrEmpty(txtParams.Text))
+                    foreach (var optionSet in txtParams.Text.Split('&'))
+                    {
+                        var option = optionSet.Split('=');
+                        if (option.Length != 2)
+                            throw new Exception(txtParams.Text + " is not a valid view query string.");
+
+                        viewQuery.Options[option[0]] = option[1];
+                    }
+
+                try
+                {
+                    ShowResult(root, viewQuery.GetResult().result, null);
+                }
+                catch (Exception ex)
+                {
+                    root.Nodes.Add("Error: " + ex.Message);
+                    MessageBox.Show(ex.ToString(), "Exception running view", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+
+            ShowResults();
+        }
+
+        private void ShowResults()
+        {
+            splitContainer2.Panel2Collapsed = false;
+            cmdResults.Checked = true;
+        }
+
+        private void ShowResult(TreeNode root, JToken value, JToken parent)
+        {
+            switch (value.Type)
+            {
+                case JTokenType.Array:
+                    var i = 0;
+                    foreach (var element in (JArray)value)
+                        ShowResult(root.Nodes.Add("element " + (i++)), element, value);
+                    break;
+                case JTokenType.Object:
+                    foreach (var property in ((JObject)value))
+                        ShowResult(root.Nodes.Add(property.Key), property.Value, property.Value.Parent);
+                    break;
+                default:
+                    if (parent != null && parent.Type == JTokenType.Property)
+                        root.Text += ": " + value.ToString();
+                    else
+                        root.Nodes.Add(value.ToString());
+                    break;
+            }
+        }
+
+        private void collapseAllToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            tvResults.CollapseAll();
+        }
+
+        private void expandAllToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            tvResults.ExpandAll();
         }
     }
 }
