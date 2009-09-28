@@ -5,11 +5,18 @@ using Divan;
 using System.IO;
 using System.Security;
 using Divan.Lucene;
+using Newtonsoft.Json;
 
 namespace LoveSeat
 {
     public partial class FrmMain : Form
     {
+        class Settings
+        {
+            public string Connection;
+            public int FormX, FormY, FormWidth, FormHeight;
+        }
+
         const string MapTemplate =
 @"function (doc) {
     
@@ -32,6 +39,7 @@ namespace LoveSeat
         CouchServer _svr;
         CouchViewDefinitionBase _currentDefinition;
         bool _isMap;
+        Settings settings;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FrmMain"/> class.
@@ -40,10 +48,6 @@ namespace LoveSeat
         {
             InitializeComponent();
             toolStripStatusLabel1.Text = String.Empty;
-
-            var connection = TryLoadConnection();
-            if (!String.IsNullOrEmpty(connection))
-                tstServer.Text = connection;
         }
 
         /// <summary>
@@ -96,17 +100,21 @@ namespace LoveSeat
 
             toolStripStatusLabel1.Text = "Connected to " + connection;
 
-            SaveConnection(connection);
+            settings.Connection = connection;
         }
 
-        private void SaveConnection(string connection)
+        private void SaveSettings(Settings settings)
         {
             try
             {
                 if (File.Exists(ConfigFile))
                     File.Delete(ConfigFile);
 
-                File.WriteAllText(ConfigFile, connection);
+                using (var streamWriter = new StreamWriter(File.OpenWrite(ConfigFile))) {
+                    new JsonSerializer().Serialize(streamWriter, settings);
+                    streamWriter.Flush();
+                    streamWriter.Close();
+                }
             }
             catch (UnauthorizedAccessException)
             {
@@ -122,14 +130,17 @@ namespace LoveSeat
             }
         }
 
-        private string TryLoadConnection()
+        private Settings TryLoadSettings()
         {
             try
             {
                 if (!File.Exists(ConfigFile))
                     return null;
-
-                return File.ReadAllText(ConfigFile);
+                
+                using (var reader = File.OpenText(ConfigFile))
+                {
+                    return (Settings)new JsonSerializer().Deserialize(reader, typeof(Settings));
+                }
             }
             catch (UnauthorizedAccessException)
             {
@@ -492,6 +503,45 @@ namespace LoveSeat
         {
             if (((e.Modifiers & Keys.Control) == Keys.Control) && e.KeyCode == Keys.S)
                 VerifySave(false);
+        }
+
+        private void FrmMain_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            settings.FormX = Left;
+            settings.FormY = Top;
+            settings.FormWidth = Width;
+            settings.FormHeight = Height;
+
+            SaveSettings(settings);
+        }
+
+        private void FrmMain_Shown(object sender, EventArgs e)
+        {
+
+        }
+
+        private void FrmMain_Load(object sender, EventArgs e)
+        {
+            settings = TryLoadSettings();
+            if (settings != null)
+            {
+                if (!String.IsNullOrEmpty(settings.Connection))
+                    tstServer.Text = settings.Connection;
+
+                if (settings.FormX != 0)
+                    Left = settings.FormX;
+
+                if (settings.FormY != 0)
+                    Top = settings.FormY;
+
+                if (settings.FormWidth != 0)
+                    Width = settings.FormWidth;
+
+                if (settings.FormHeight != 0)
+                    Height = settings.FormHeight;
+            }
+            else
+                settings = new Settings();
         }
     }
 }
