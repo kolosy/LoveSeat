@@ -72,23 +72,11 @@ namespace LoveSeat
             _isMap = false;
             tvMain.Nodes.Clear();
             rtSource.Clear();
-            
+
             var parts = connection.Split(':');
-            switch (parts.Length)
-            {
-                case 1:
-                    _svr = new CouchServer(connection);
-                    break;
-                case 2:
-                    _svr = new CouchServer(parts[0], Convert.ToInt32(parts[1]));
-                    break;
-                case 3:
-                    _svr = new CouchServer(parts[1].TrimStart('/'), Convert.ToInt32(parts[2]));
-                    break;
-                default:
-                    MessageBox.Show(String.Format("{0} is not a recognized URL", connection), "Can't connect", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-            }
+            _svr = CreateServer(parts);
+            if (_svr == null)
+                return;
 
             foreach (var db in _svr.GetDatabaseNames())
             {
@@ -102,6 +90,22 @@ namespace LoveSeat
             toolStripStatusLabel1.Text = "Connected to " + connection;
 
             settings.Connection = connection;
+        }
+
+        private CouchServer CreateServer(string[] parts)
+        {
+            switch (parts.Length)
+            {
+                case 1:
+                    return new CouchServer(parts[0]);
+                case 2:
+                    return new CouchServer(parts[0], Convert.ToInt32(parts[1]));
+                case 3:
+                    return new CouchServer(parts[1].TrimStart('/'), Convert.ToInt32(parts[2]));
+                default:
+                    MessageBox.Show(String.Format("{0} is not a recognized URL", parts[0]), "Can't connect", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return null;
+            }
         }
 
         private void SaveSettings(Settings settings)
@@ -415,6 +419,18 @@ namespace LoveSeat
                 (_contextNode != null) &&
                 (_contextNode.Tag is CouchDesignDocument);
 
+            cloneViewsToolStripMenuItem.Visible =
+                (_contextNode != null) &&
+                (_contextNode.Tag is CouchDatabase);
+
+            extractViewsToolStripMenuItem.Visible =
+                (_contextNode != null) &&
+                (_contextNode.Tag is CouchDatabase);
+
+            importViewsToolStripMenuItem.Visible =
+                (_contextNode != null) &&
+                (_contextNode.Tag is CouchDatabase);
+
             ctxSeparator.Visible = !(_contextNode == null || _contextNode.Tag == null);
         }
 
@@ -650,6 +666,85 @@ namespace LoveSeat
         private void expandAllToolStripMenuItem_Click(object sender, EventArgs e)
         {
             tvResults.ExpandAll();
+        }
+
+        private void cloneViewsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            CouchDatabase sourceDb = (CouchDatabase)_contextNode.Tag;
+
+            using (var dialog = new dlgName("Specify Target", "Target Server/database"))
+            {
+                if (dialog.ShowDialog() != DialogResult.OK)
+                    return;
+
+                var dbParts = dialog.EnteredName.Replace("//", "").Split('/');
+                var svr = CreateServer(dbParts[0].Split(':'));
+                var targetDb = svr.GetDatabase(dbParts[1]);
+
+                foreach (var view in sourceDb.QueryAllDocuments().StartKey("_design").EndKey("_designZZZZZZZZZZZZZZZZZ").GetResult().RowDocuments())
+                {
+                    var design = sourceDb.GetDocument<CouchDesignDocument>(view.Key);
+                    
+                    // need to make sure to overwrite the target
+                    if (targetDb.HasDocument(design.Id))
+                        design.Rev = targetDb.GetDocument(design.Id).Rev;
+                    else
+                        design.Rev = null;
+
+                    design.Owner = targetDb;
+                    design.Synch();
+                }
+            }
+        }
+
+        private void extractViewsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            CouchDatabase sourceDb = (CouchDatabase)_contextNode.Tag;
+
+            if (folderBrowserDialog1.ShowDialog() != DialogResult.OK)
+                return;
+
+            foreach (var view in sourceDb.QueryAllDocuments().StartKey("_design").EndKey("_designZZZZZZZZZZZZZZZZZ").GetResult().RowDocuments())
+            {
+                var design = sourceDb.GetDocument<CouchDesignDocument>(view.Key);
+
+                using (var streamWriter = new StreamWriter(File.OpenWrite(Path.Combine(folderBrowserDialog1.SelectedPath, design.Id.Substring(8) + ".js"))))
+                {
+                    var writer = new JsonTextWriter(streamWriter);
+                    writer.Indentation = 1;
+                    writer.IndentChar = '\t';
+                    writer.Formatting = Formatting.Indented;
+                    writer.WriteStartObject();
+                    design.WriteJson(writer);
+                    writer.WriteEndObject();
+                }
+            }
+        }
+
+        private void importViewsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            CouchDatabase targetDb = (CouchDatabase)_contextNode.Tag;
+
+            if (folderBrowserDialog1.ShowDialog() != DialogResult.OK)
+                return;
+
+            foreach (var file in Directory.GetFiles(folderBrowserDialog1.SelectedPath))
+            {
+                using (var reader = new StreamReader(File.OpenRead(file)))
+                {
+                    var design = new CouchDesignDocument();
+                    design.ReadJson((JObject)JToken.ReadFrom(new JsonTextReader(reader)));
+                    
+                    // need to make sure to overwrite the target
+                    if (targetDb.HasDocument(design.Id))
+                        design.Rev = targetDb.GetDocument(design.Id).Rev;
+                    else
+                        design.Rev = null;
+                    
+                    design.Owner = targetDb;
+                    design.Synch();
+                }
+            }
         }
     }
 }
