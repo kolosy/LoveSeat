@@ -746,5 +746,17 @@ namespace LoveSeat
                 }
             }
         }
+
+        private void tstServer_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Return)
+                cmdOpen_Click(sender, EventArgs.Empty);
+        }
+
+        private void txtParams_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Return)
+                cmdRun_Click(sender, EventArgs.Empty);
+        }
     }
 }
