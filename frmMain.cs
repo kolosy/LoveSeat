@@ -188,7 +188,7 @@ namespace LoveSeat
         /// <param name="parent">The parent.</param>
         private void LoadDatabase(CouchDatabase couchDatabase, TreeNode parent)
         {
-            foreach (var view in couchDatabase.QueryAllDocuments().StartKey("_design").EndKey("_designZZZZZZZZZZZZZZZZZ").GetResult().RowDocuments())
+            foreach (var view in couchDatabase.QueryAllDocuments().StartKey("_design").EndKey("_design0").GetResult().RowDocuments())
             {
                 var design = couchDatabase.GetDocument<CouchDesignDocument>(view.Key);
                 design.Owner = couchDatabase;
@@ -431,7 +431,12 @@ namespace LoveSeat
                 (_contextNode != null) &&
                 (_contextNode.Tag is CouchDatabase);
 
-            ctxSeparator.Visible = !(_contextNode == null || _contextNode.Tag == null);
+            ctxSeparator.Visible = (_contextNode != null) && (
+                (_contextNode.Tag is CouchDatabase) ||
+                (_contextNode.Tag is CouchDesignDocument) ||
+                (_contextNode.Tag is CouchViewDefinition)
+                );
+            ctxSeparator2.Visible = (_contextNode != null) && (_contextNode.Tag is CouchDatabase);
         }
 
         /// <summary>
