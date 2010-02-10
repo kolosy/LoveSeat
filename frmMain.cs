@@ -7,6 +7,9 @@ using System.Security;
 using Divan.Lucene;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using UrielGuy.SyntaxHighlightingTextBox;
+using System.Drawing;
+using System.Linq;
 
 namespace LoveSeat
 {
@@ -16,12 +19,10 @@ namespace LoveSeat
         {
             public string Connection;
             public int FormX, FormY, FormWidth, FormHeight;
+            public Font Font;
         }
 
-        const string MapTemplate =
-@"function (doc) {
-    
-}";
+        const string MapTemplate = "function (doc) {\r\n\t\r\n}";
 
         const string ReduceTemplate =
 @"function (keys, values, rereduce) {
@@ -49,6 +50,41 @@ namespace LoveSeat
         {
             InitializeComponent();
             toolStripStatusLabel1.Text = String.Empty;
+
+            rtSource.Seperators.Add(' ');
+            rtSource.Seperators.Add('\r');
+            rtSource.Seperators.Add('\n');
+            rtSource.Seperators.Add(',');
+            rtSource.Seperators.Add('.');
+            rtSource.Seperators.Add('-');
+            rtSource.Seperators.Add('+');
+            rtSource.Seperators.Add('*');
+            rtSource.Seperators.Add('/');
+
+            rtSource.WordWrap = false;
+            rtSource.ScrollBars = RichTextBoxScrollBars.Both;// & RichTextBoxScrollBars.ForcedVertical;
+
+            rtSource.FilterAutoComplete = false;
+
+            foreach (var kw in SimpleJSLanguageModel.Keywords)
+                rtSource.HighlightDescriptors.Add(
+                    new HighlightDescriptor(
+                        kw,
+                        Color.Blue,
+                        null,
+                        DescriptorType.Word,
+                        DescriptorRecognition.WholeWord,
+                        true));
+
+            foreach (var kw in SimpleJSLanguageModel.ReservedWords)
+                rtSource.HighlightDescriptors.Add(
+                    new HighlightDescriptor(
+                        kw,
+                        Color.Green,
+                        null,
+                        DescriptorType.Word,
+                        DescriptorRecognition.WholeWord,
+                        true));
         }
 
         /// <summary>
@@ -533,6 +569,7 @@ namespace LoveSeat
             settings.FormY = Top;
             settings.FormWidth = Width;
             settings.FormHeight = Height;
+            settings.Font = rtSource.Font;
 
             SaveSettings(settings);
         }
@@ -561,6 +598,9 @@ namespace LoveSeat
 
                 if (settings.FormHeight != 0)
                     Height = settings.FormHeight;
+
+                if (settings.Font != null)
+                    rtSource.Font = settings.Font;
             }
             else
                 settings = new Settings();
@@ -762,6 +802,18 @@ namespace LoveSeat
         {
             if (e.KeyCode == Keys.Return)
                 cmdRun_Click(sender, EventArgs.Empty);
+        }
+
+        private void fontsAndColorsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            fontDialog1.Font = rtSource.Font;
+            if (fontDialog1.ShowDialog(this) != DialogResult.OK)
+                return;
+
+            rtSource.Font = fontDialog1.Font;
+
+            // trigger the highlighting
+            rtSource.Text += "";
         }
     }
 }
