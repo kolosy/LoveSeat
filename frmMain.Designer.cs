@@ -48,6 +48,8 @@
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tvMain = new System.Windows.Forms.TreeView();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
+            this.contextMenuStrip3 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.fontsAndColorsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tvResults = new System.Windows.Forms.TreeView();
             this.contextMenuStrip2 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.collapseAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -66,10 +68,8 @@
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
-            this.rtSource = new UrielGuy.SyntaxHighlightingTextBox.SyntaxHighlightingTextBox();
-            this.contextMenuStrip3 = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.fontsAndColorsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fontDialog1 = new System.Windows.Forms.FontDialog();
+            this.rtSource = new System.Windows.Forms.RichTextBox();
             this.contextMenuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.toolStripContainer1.BottomToolStripPanel.SuspendLayout();
@@ -82,10 +82,10 @@
             this.splitContainer2.Panel1.SuspendLayout();
             this.splitContainer2.Panel2.SuspendLayout();
             this.splitContainer2.SuspendLayout();
+            this.contextMenuStrip3.SuspendLayout();
             this.contextMenuStrip2.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.toolStrip2.SuspendLayout();
-            this.contextMenuStrip3.SuspendLayout();
             this.SuspendLayout();
             // 
             // contextMenuStrip1
@@ -221,8 +221,8 @@
             // 
             // toolStripContainer1.TopToolStripPanel
             // 
-            this.toolStripContainer1.TopToolStripPanel.Controls.Add(this.toolStrip1);
             this.toolStripContainer1.TopToolStripPanel.Controls.Add(this.toolStrip2);
+            this.toolStripContainer1.TopToolStripPanel.Controls.Add(this.toolStrip1);
             // 
             // splitContainer1
             // 
@@ -275,6 +275,20 @@
             this.splitContainer2.Size = new System.Drawing.Size(778, 486);
             this.splitContainer2.SplitterDistance = 243;
             this.splitContainer2.TabIndex = 0;
+            // 
+            // contextMenuStrip3
+            // 
+            this.contextMenuStrip3.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.fontsAndColorsToolStripMenuItem});
+            this.contextMenuStrip3.Name = "contextMenuStrip3";
+            this.contextMenuStrip3.Size = new System.Drawing.Size(164, 26);
+            // 
+            // fontsAndColorsToolStripMenuItem
+            // 
+            this.fontsAndColorsToolStripMenuItem.Name = "fontsAndColorsToolStripMenuItem";
+            this.fontsAndColorsToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
+            this.fontsAndColorsToolStripMenuItem.Text = "Fonts and Colors";
+            this.fontsAndColorsToolStripMenuItem.Click += new System.EventHandler(this.fontsAndColorsToolStripMenuItem_Click);
             // 
             // tvResults
             // 
@@ -415,33 +429,13 @@
             // 
             // rtSource
             // 
-            this.rtSource.CaseSensitive = false;
-            this.rtSource.ContextMenuStrip = this.contextMenuStrip3;
+            this.rtSource.AcceptsTab = true;
             this.rtSource.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.rtSource.FilterAutoComplete = false;
-            this.rtSource.Font = new System.Drawing.Font("Anonymous", 8.999999F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.rtSource.Location = new System.Drawing.Point(0, 0);
-            this.rtSource.MaxUndoRedoSteps = 50;
             this.rtSource.Name = "rtSource";
-            this.rtSource.ShowSelectionMargin = true;
             this.rtSource.Size = new System.Drawing.Size(778, 486);
             this.rtSource.TabIndex = 0;
             this.rtSource.Text = "";
-            this.rtSource.WordWrap = false;
-            // 
-            // contextMenuStrip3
-            // 
-            this.contextMenuStrip3.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.fontsAndColorsToolStripMenuItem});
-            this.contextMenuStrip3.Name = "contextMenuStrip3";
-            this.contextMenuStrip3.Size = new System.Drawing.Size(164, 26);
-            // 
-            // fontsAndColorsToolStripMenuItem
-            // 
-            this.fontsAndColorsToolStripMenuItem.Name = "fontsAndColorsToolStripMenuItem";
-            this.fontsAndColorsToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
-            this.fontsAndColorsToolStripMenuItem.Text = "Fonts and Colors";
-            this.fontsAndColorsToolStripMenuItem.Click += new System.EventHandler(this.fontsAndColorsToolStripMenuItem_Click);
             // 
             // FrmMain
             // 
@@ -472,12 +466,12 @@
             this.splitContainer2.Panel1.ResumeLayout(false);
             this.splitContainer2.Panel2.ResumeLayout(false);
             this.splitContainer2.ResumeLayout(false);
+            this.contextMenuStrip3.ResumeLayout(false);
             this.contextMenuStrip2.ResumeLayout(false);
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
             this.toolStrip2.ResumeLayout(false);
             this.toolStrip2.PerformLayout();
-            this.contextMenuStrip3.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -520,10 +514,10 @@
         private System.Windows.Forms.OpenFileDialog openFileDialog1;
         private System.Windows.Forms.SaveFileDialog saveFileDialog1;
         private System.Windows.Forms.FolderBrowserDialog folderBrowserDialog1;
-        private UrielGuy.SyntaxHighlightingTextBox.SyntaxHighlightingTextBox rtSource;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip3;
         private System.Windows.Forms.ToolStripMenuItem fontsAndColorsToolStripMenuItem;
         private System.Windows.Forms.FontDialog fontDialog1;
+        private System.Windows.Forms.RichTextBox rtSource;
     }
 }
 

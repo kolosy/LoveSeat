@@ -128,7 +128,7 @@
         AAEAAAD/////AQAAAAAAAAAMAgAAAFdTeXN0ZW0uV2luZG93cy5Gb3JtcywgVmVyc2lvbj0yLjAuMC4w
         LCBDdWx0dXJlPW5ldXRyYWwsIFB1YmxpY0tleVRva2VuPWI3N2E1YzU2MTkzNGUwODkFAQAAACZTeXN0
         ZW0uV2luZG93cy5Gb3Jtcy5JbWFnZUxpc3RTdHJlYW1lcgEAAAAERGF0YQcCAgAAAAkDAAAADwMAAADU
-        DQAAAk1TRnQBSQFMAgEBBQEAAWABAAFgAQABEAEAARABAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
+        DQAAAk1TRnQBSQFMAgEBBQEAAWgBAAFoAQABEAEAARABAAT/AQkBAAj/AUIBTQE2AQQGAAE2AQQCAAEo
         AwABQAMAASADAAEBAQABCAYAAQgYAAGAAgABgAMAAoABAAGAAwABgAEAAYABAAKAAgADwAEAAcAB3AHA
         AQAB8AHKAaYBAAEzBQABMwEAATMBAAEzAQACMwIAAxYBAAMcAQADIgEAAykBAANVAQADTQEAA0IBAAM5
         AQABgAF8Af8BAAJQAf8BAAGTAQAB1gEAAf8B7AHMAQABxgHWAe8BAAHWAucBAAGQAakBrQIAAf8BMwMA
@@ -193,29 +193,13 @@
   <metadata name="statusStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>122, 17</value>
   </metadata>
-  <metadata name="contextMenuStrip3.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>503, 17</value>
-  </metadata>
   <metadata name="contextMenuStrip2.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>868, 17</value>
-  </metadata>
-  <metadata name="toolStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>658, 17</value>
   </metadata>
   <metadata name="toolStrip2.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>763, 17</value>
   </metadata>
   <assembly alias="System.Drawing" name="System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <data name="cmdOpen.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-    <value>
-        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
-        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADuSURBVDhPY2AY3qBszov/L97++E+2L4tnPv3vV3b0//1n
-        n4kzBGRjwbRH/zP6bv2Pb734P2vC7f/Zs77/145Y9//h8y+EDSma8eT/ssO//8/b9/d/67p//2tX/P+f
-        P/fH/8Dmp8QZkjPp3v/pO//8r1j693/c5D//I3s+/Q9uefrfp/rGf8e8Y2BD8IZHavf1/50b/v6PmfD9
-        f1jHm//+9ff+e5Rd/O+Ud+S/Ydii/5dvv8JvQGzz+f/K7pP+q3rP+q/uv+i/Zsjq//ZZ+/9rBSwgrBmb
-        01R95/7X8JtLnmaQgSqe08jXTHbiGXoaAdRilRn6B397AAAAAElFTkSuQmCC
-</value>
-  </data>
   <data name="cmdRun.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAPCAYAAADtc08vAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
@@ -248,6 +232,22 @@
         4O2aOmg01ljB6VP9PJ6UMAoJ3ZlORdumhdHM1JWK4J0J2ULwL3/0d2xoOmtKzOuNAAAAAElFTkSuQmCC
 </value>
   </data>
+  <metadata name="toolStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>658, 17</value>
+  </metadata>
+  <data name="cmdOpen.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAADuSURBVDhPY2AY3qBszov/L97++E+2L4tnPv3vV3b0//1n
+        n4kzBGRjwbRH/zP6bv2Pb734P2vC7f/Zs77/145Y9//h8y+EDSma8eT/ssO//8/b9/d/67p//2tX/P+f
+        P/fH/8Dmp8QZkjPp3v/pO//8r1j693/c5D//I3s+/Q9uefrfp/rGf8e8Y2BD8IZHavf1/50b/v6PmfD9
+        f1jHm//+9ff+e5Rd/O+Ud+S/Ydii/5dvv8JvQGzz+f/K7pP+q3rP+q/uv+i/Zsjq//ZZ+/9rBSwgrBmb
+        01R95/7X8JtLnmaQgSqe08jXTHbiGXoaAdRilRn6B397AAAAAElFTkSuQmCC
+</value>
+  </data>
+  <metadata name="contextMenuStrip3.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>503, 17</value>
+  </metadata>
   <metadata name="openFileDialog1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>1023, 17</value>
   </metadata>

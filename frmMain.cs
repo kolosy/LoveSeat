@@ -42,6 +42,9 @@ namespace LoveSeat
         CouchViewDefinitionBase _currentDefinition;
         bool _isMap;
         Settings settings;
+        
+        private bool runningOnMono = Type.GetType("Mono.Runtime") != null;
+
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FrmMain"/> class.
@@ -51,23 +54,55 @@ namespace LoveSeat
             InitializeComponent();
             toolStripStatusLabel1.Text = String.Empty;
 
-            rtSource.Seperators.Add(' ');
-            rtSource.Seperators.Add('\r');
-            rtSource.Seperators.Add('\n');
-            rtSource.Seperators.Add(',');
-            rtSource.Seperators.Add('.');
-            rtSource.Seperators.Add('-');
-            rtSource.Seperators.Add('+');
-            rtSource.Seperators.Add('*');
-            rtSource.Seperators.Add('/');
+            // current highlighting editor implementation doesn't play nice with mono
+            if (!runningOnMono)
+                ConfigureHighlightingEditor();
+        }
 
-            rtSource.WordWrap = false;
-            rtSource.ScrollBars = RichTextBoxScrollBars.Both;// & RichTextBoxScrollBars.ForcedVertical;
+        /// <summary>
+        /// Configures the editor.
+        /// </summary>
+        public void ConfigureHighlightingEditor()
+        {
+            splitContainer2.Panel1.Controls.Remove(rtSource);
 
-            rtSource.FilterAutoComplete = false;
+            var editor = new SyntaxHighlightingTextBox
+                             {
+                                 CaseSensitive = false,
+                                 ContextMenuStrip = contextMenuStrip3,
+                                 Dock = DockStyle.Fill,
+                                 FilterAutoComplete = false,
+                                 Font =
+                                     new Font("Anonymous", 8.999999F, FontStyle.Regular, GraphicsUnit.Point,
+                                              ((byte) (0))),
+                                 Location = new Point(0, 0),
+                                 MaxUndoRedoSteps = 50,
+                                 Name = "rtSource",
+                                 ShowSelectionMargin = true,
+                                 Size = new Size(778, 486),
+                                 TabIndex = 0,
+                                 Text = "",
+                                 WordWrap = false
+                             };
+
+            editor.Seperators.Add(' ');
+            editor.Seperators.Add('\r');
+            editor.Seperators.Add('\t');
+            editor.Seperators.Add('\n');
+            editor.Seperators.Add(',');
+            editor.Seperators.Add('.');
+            editor.Seperators.Add('-');
+            editor.Seperators.Add('+');
+            editor.Seperators.Add('*');
+            editor.Seperators.Add('/');
+
+            editor.WordWrap = false;
+            editor.ScrollBars = RichTextBoxScrollBars.Both;// & RichTextBoxScrollBars.ForcedVertical;
+
+            editor.FilterAutoComplete = false;
 
             foreach (var kw in SimpleJSLanguageModel.Keywords)
-                rtSource.HighlightDescriptors.Add(
+                editor.HighlightDescriptors.Add(
                     new HighlightDescriptor(
                         kw,
                         Color.Blue,
@@ -77,7 +112,7 @@ namespace LoveSeat
                         true));
 
             foreach (var kw in SimpleJSLanguageModel.ReservedWords)
-                rtSource.HighlightDescriptors.Add(
+                editor.HighlightDescriptors.Add(
                     new HighlightDescriptor(
                         kw,
                         Color.Green,
@@ -85,6 +120,9 @@ namespace LoveSeat
                         DescriptorType.Word,
                         DescriptorRecognition.WholeWord,
                         true));
+
+            rtSource = editor;
+            splitContainer2.Panel1.Controls.Add(rtSource);
         }
 
         /// <summary>
