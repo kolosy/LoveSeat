@@ -10,7 +10,7 @@ LoveSeat started with three simple goals in mind
 Current features
 --------------
 
-* Works on Linux and MacOS (through Mono)
+* Works on Windows, and Linux and MacOS through Mono
 * CRU(no D yet) on couchdb design docs, views, and lucene indices
 * Browse database and view structure through a tree representation
 * Export all design documents to disk as .js files
