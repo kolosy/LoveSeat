@@ -11,12 +11,12 @@ Current features
 --------------
 
 * Works on Windows, and Linux and MacOS through Mono
-* CRU(no D yet) on couchdb design docs, views, and lucene indices
+* CRUD on couchdb design docs, views, and lucene indices
 * Browse database and view structure through a tree representation
 * Export all design documents to disk as .js files
 * Import all .js files on disk into a database as design docs
 * Clone docs in one database to another (deploy from local dev to remote prod)
-* Syntax hilighting (windows javascript views only)
+* Syntax highlighting (windows javascript views only)
 
 Coming soon
 -------------
