@@ -49,6 +49,8 @@
             this.tvMain = new System.Windows.Forms.TreeView();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.rtSource = new System.Windows.Forms.RichTextBox();
+            this.contextMenuStrip3 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.fontsAndColorsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tvResults = new System.Windows.Forms.TreeView();
             this.contextMenuStrip2 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.collapseAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -64,12 +66,12 @@
             this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
             this.tstServer = new System.Windows.Forms.ToolStripTextBox();
             this.cmdOpen = new System.Windows.Forms.ToolStripButton();
-            this.contextMenuStrip3 = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.fontsAndColorsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
             this.fontDialog1 = new System.Windows.Forms.FontDialog();
+            this.addDatabaseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.deleteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.toolStripContainer1.BottomToolStripPanel.SuspendLayout();
@@ -82,10 +84,10 @@
             this.splitContainer2.Panel1.SuspendLayout();
             this.splitContainer2.Panel2.SuspendLayout();
             this.splitContainer2.SuspendLayout();
+            this.contextMenuStrip3.SuspendLayout();
             this.contextMenuStrip2.SuspendLayout();
             this.toolStrip2.SuspendLayout();
             this.toolStrip1.SuspendLayout();
-            this.contextMenuStrip3.SuspendLayout();
             this.SuspendLayout();
             // 
             // contextMenuStrip1
@@ -95,6 +97,8 @@
             this.addViewToolStripMenuItem,
             this.addLuceneIndexToolStripMenuItem,
             this.addDesignToolStripMenuItem,
+            this.addDatabaseToolStripMenuItem,
+            this.deleteToolStripMenuItem,
             this.ctxSeparator,
             this.refreshToolStripMenuItem,
             this.ctxSeparator2,
@@ -102,7 +106,7 @@
             this.extractViewsToolStripMenuItem,
             this.importViewsToolStripMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(169, 192);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(169, 258);
             this.contextMenuStrip1.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuStrip1_Opening);
             // 
             // addReduceToolStripMenuItem
@@ -180,6 +184,7 @@
             this.imageList1.Images.SetKeyName(2, "Table.bmp");
             this.imageList1.Images.SetKeyName(3, "FormulaEvaluator.bmp");
             this.imageList1.Images.SetKeyName(4, "Textbox.bmp");
+            this.imageList1.Images.SetKeyName(5, "Webcontrol_Sitemapdatasrc.bmp");
             // 
             // statusStrip1
             // 
@@ -286,6 +291,20 @@
             this.rtSource.Size = new System.Drawing.Size(778, 486);
             this.rtSource.TabIndex = 0;
             this.rtSource.Text = "";
+            // 
+            // contextMenuStrip3
+            // 
+            this.contextMenuStrip3.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.fontsAndColorsToolStripMenuItem});
+            this.contextMenuStrip3.Name = "contextMenuStrip3";
+            this.contextMenuStrip3.Size = new System.Drawing.Size(164, 26);
+            // 
+            // fontsAndColorsToolStripMenuItem
+            // 
+            this.fontsAndColorsToolStripMenuItem.Name = "fontsAndColorsToolStripMenuItem";
+            this.fontsAndColorsToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
+            this.fontsAndColorsToolStripMenuItem.Text = "Fonts and Colors";
+            this.fontsAndColorsToolStripMenuItem.Click += new System.EventHandler(this.fontsAndColorsToolStripMenuItem_Click);
             // 
             // tvResults
             // 
@@ -415,20 +434,6 @@
             this.cmdOpen.Text = "Connect to Server";
             this.cmdOpen.Click += new System.EventHandler(this.cmdOpen_Click);
             // 
-            // contextMenuStrip3
-            // 
-            this.contextMenuStrip3.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.fontsAndColorsToolStripMenuItem});
-            this.contextMenuStrip3.Name = "contextMenuStrip3";
-            this.contextMenuStrip3.Size = new System.Drawing.Size(164, 26);
-            // 
-            // fontsAndColorsToolStripMenuItem
-            // 
-            this.fontsAndColorsToolStripMenuItem.Name = "fontsAndColorsToolStripMenuItem";
-            this.fontsAndColorsToolStripMenuItem.Size = new System.Drawing.Size(163, 22);
-            this.fontsAndColorsToolStripMenuItem.Text = "Fonts and Colors";
-            this.fontsAndColorsToolStripMenuItem.Click += new System.EventHandler(this.fontsAndColorsToolStripMenuItem_Click);
-            // 
             // openFileDialog1
             // 
             this.openFileDialog1.FileName = "openFileDialog1";
@@ -437,6 +442,20 @@
             // saveFileDialog1
             // 
             this.saveFileDialog1.Filter = "Javascript Files|*.js|All Files|*.*";
+            // 
+            // addDatabaseToolStripMenuItem
+            // 
+            this.addDatabaseToolStripMenuItem.Name = "addDatabaseToolStripMenuItem";
+            this.addDatabaseToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
+            this.addDatabaseToolStripMenuItem.Text = "Add Database";
+            this.addDatabaseToolStripMenuItem.Click += new System.EventHandler(this.addDatabaseToolStripMenuItem_Click);
+            // 
+            // deleteToolStripMenuItem
+            // 
+            this.deleteToolStripMenuItem.Name = "deleteToolStripMenuItem";
+            this.deleteToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
+            this.deleteToolStripMenuItem.Text = "Delete";
+            this.deleteToolStripMenuItem.Click += new System.EventHandler(this.deleteToolStripMenuItem_Click);
             // 
             // FrmMain
             // 
@@ -467,12 +486,12 @@
             this.splitContainer2.Panel1.ResumeLayout(false);
             this.splitContainer2.Panel2.ResumeLayout(false);
             this.splitContainer2.ResumeLayout(false);
+            this.contextMenuStrip3.ResumeLayout(false);
             this.contextMenuStrip2.ResumeLayout(false);
             this.toolStrip2.ResumeLayout(false);
             this.toolStrip2.PerformLayout();
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
-            this.contextMenuStrip3.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -519,6 +538,8 @@
         private System.Windows.Forms.ToolStripMenuItem fontsAndColorsToolStripMenuItem;
         private System.Windows.Forms.FontDialog fontDialog1;
         private System.Windows.Forms.RichTextBox rtSource;
+        private System.Windows.Forms.ToolStripMenuItem addDatabaseToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem deleteToolStripMenuItem;
     }
 }
 

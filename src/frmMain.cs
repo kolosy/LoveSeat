@@ -10,6 +10,7 @@ using Newtonsoft.Json.Linq;
 using UrielGuy.SyntaxHighlightingTextBox;
 using System.Drawing;
 using System.Linq;
+using System.Net;
 
 namespace LoveSeat
 {
@@ -82,7 +83,8 @@ namespace LoveSeat
                                  Size = new Size(778, 486),
                                  TabIndex = 0,
                                  Text = "",
-                                 WordWrap = false
+                                 WordWrap = false,
+                                 AcceptsTab = true
                              };
 
             editor.Seperators.Add(' ');
@@ -141,29 +143,42 @@ namespace LoveSeat
         /// <param name="connection">The connection.</param>
         private void LoadServer(string connection)
         {
-            _svr = null;
-            _currentDefinition = null;
-            _isMap = false;
-            tvMain.Nodes.Clear();
-            rtSource.Clear();
-
-            var parts = connection.Split(':');
-            _svr = CreateServer(parts);
-            if (_svr == null)
-                return;
-
-            foreach (var db in _svr.GetDatabaseNames())
+            try
             {
-                var node = tvMain.Nodes.Add(db, db);
-                node.Tag = new CouchDatabase(db, _svr);
-                node.Nodes.Add(String.Empty);
-                node.ImageIndex = 0;
-                node.SelectedImageIndex = 0;
+                _svr = null;
+                _currentDefinition = null;
+                _isMap = false;
+                tvMain.Nodes.Clear();
+                rtSource.Clear();
+
+                var parts = connection.Split(':');
+                _svr = CreateServer(parts);
+                if (_svr == null)
+                    return;
+
+                tvMain.Nodes.Clear();
+                var svrNode = tvMain.Nodes.Add(parts[0], parts[0]);
+                svrNode.Tag = _svr;
+                svrNode.ImageIndex = 5;
+                svrNode.SelectedImageIndex = 5;
+
+                foreach (var db in _svr.GetDatabaseNames())
+                {
+                    var node = svrNode.Nodes.Add(db, db);
+                    node.Tag = new CouchDatabase(db, _svr);
+                    node.Nodes.Add(String.Empty);
+                    node.ImageIndex = 0;
+                    node.SelectedImageIndex = 0;
+                }
+
+                toolStripStatusLabel1.Text = "Connected to " + connection;
+
+                settings.Connection = connection;
             }
-
-            toolStripStatusLabel1.Text = "Connected to " + connection;
-
-            settings.Connection = connection;
+            catch (WebException ex)
+            {
+                MessageBox.Show(ex.Message, "Unable to connect", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private CouchServer CreateServer(string[] parts)
@@ -479,6 +494,8 @@ namespace LoveSeat
             addReduceToolStripMenuItem.Visible =
                 (_contextNode != null) &&
                 (_contextNode.Tag is CouchViewDefinition) &&
+                (_contextNode.Name != "map") &&
+                (_contextNode.Name != "reduce") &&
                 (_contextNode.Nodes.Count != 2);
 
             addDesignToolStripMenuItem.Visible =
@@ -492,6 +509,19 @@ namespace LoveSeat
             addLuceneIndexToolStripMenuItem.Visible =
                 (_contextNode != null) &&
                 (_contextNode.Tag is CouchDesignDocument);
+
+            addDatabaseToolStripMenuItem.Visible =
+                (_contextNode != null) &&
+                (_contextNode.Tag is CouchServer);
+
+            deleteToolStripMenuItem.Visible =
+                (_contextNode != null) && (
+                (_contextNode.Tag is CouchDatabase) ||
+                (_contextNode.Tag is CouchDesignDocument) ||
+                (_contextNode.Tag is CouchViewDefinition) ||
+                (_contextNode.Tag is CouchViewDefinitionBase) ||
+                (_contextNode.Tag is CouchLuceneViewDefinition)
+                );
 
             cloneViewsToolStripMenuItem.Visible =
                 (_contextNode != null) &&
@@ -513,6 +543,11 @@ namespace LoveSeat
             ctxSeparator2.Visible = (_contextNode != null) && (_contextNode.Tag is CouchDatabase);
         }
 
+        private bool hasOnlyDummyNode(TreeNode node)
+        {
+            return node.Nodes.Count == 1 && String.Empty.Equals(node.Nodes[0].Text);
+        }
+
         /// <summary>
         /// Handles the Click event of the addViewToolStripMenuItem control.
         /// </summary>
@@ -522,6 +557,9 @@ namespace LoveSeat
         {
             if (_contextNode == null)
                 return;
+
+            if (hasOnlyDummyNode(_contextNode))
+                _contextNode.Nodes.Clear();
 
             using (var dialog = new dlgName("View name", "New View"))
             {
@@ -547,6 +585,9 @@ namespace LoveSeat
             if (_contextNode == null)
                 return;
 
+            if (hasOnlyDummyNode(_contextNode))
+                _contextNode.Nodes.Clear();
+
             using (var dialog = new dlgName("Design name", "New Design"))
             {
                 if (dialog.ShowDialog() != DialogResult.OK)
@@ -566,6 +607,9 @@ namespace LoveSeat
             if (_contextNode == null)
                 return;
 
+            if (hasOnlyDummyNode(_contextNode))
+                _contextNode.Nodes.Clear();
+
             using (var dialog = new dlgName("Index name", "New Index"))
             {
                 if (dialog.ShowDialog() != DialogResult.OK)
@@ -579,7 +623,105 @@ namespace LoveSeat
                 indexNode.EnsureVisible();
             }
         }
-        
+
+
+        private void addDatabaseToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (_contextNode == null)
+                return;
+
+            if (hasOnlyDummyNode(_contextNode))
+                _contextNode.Nodes.Clear();
+
+            using (var dialog = new dlgName("Database name", "New Database"))
+            {
+                if (dialog.ShowDialog() != DialogResult.OK)
+                    return;
+
+                ((CouchServer)_contextNode.Tag).CreateDatabase(dialog.EnteredName);
+                LoadServer(tstServer.Text);
+            }
+        }
+
+        private void deleteToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (_contextNode == null)
+                return;
+
+            Action deleter = null;
+            string elementType = "";
+            if (_contextNode.Tag is CouchDatabase)
+            {
+                elementType = "database";
+                deleter = () =>
+                              {
+                                  ((CouchDatabase)_contextNode.Tag).Delete();
+                                  LoadServer(tstServer.Text);
+                              };
+            }
+            else if (_contextNode.Tag is CouchDesignDocument)
+            {
+                elementType = "design document";
+                deleter = () =>
+                {
+                    ((CouchDesignDocument)_contextNode.Tag).Owner.DeleteDocument((CouchDesignDocument)_contextNode.Tag);
+                    _contextNode.Remove();
+                };
+            }
+            else if (_contextNode.Tag is CouchViewDefinition && _contextNode.Parent.Tag is CouchDesignDocument)
+            {
+                elementType = "view";
+                deleter = () =>
+                {
+                    var doc = ((CouchViewDefinition)_contextNode.Tag).Doc;
+                    doc.RemoveView((CouchViewDefinition)_contextNode.Tag);
+                    _contextNode.Remove();
+                    doc.Synch();
+                };
+            }
+            else if (_contextNode.Tag is CouchViewDefinition)
+            {
+                if (_contextNode.Name == "map")
+                {
+                    MessageBox.Show("Map nodes are required for couch views. If you wish to remove the map node, please remove the parent view node instead.");
+                    return;
+                }
+                if (_contextNode.Name == "reduce")
+                {
+                    elementType = "reduce function";
+                    deleter = () =>
+                    {
+                        ((CouchViewDefinition)_contextNode.Tag).Reduce = null;
+                        _contextNode.Remove();
+                        ((CouchViewDefinition)_contextNode.Tag).Doc.Synch();
+                    };
+                }
+            }
+            else if (_contextNode.Tag is CouchLuceneViewDefinition)
+            {
+                elementType = "lucene index";
+                deleter = () =>
+                {
+                    var doc = ((CouchLuceneViewDefinition)_contextNode.Tag).Doc;
+                    doc.RemoveLuceneView((CouchLuceneViewDefinition)_contextNode.Tag);
+                    _contextNode.Remove();
+                    doc.Synch();
+                };
+            }
+
+            if (deleter == null)
+                return;
+
+            if (MessageBox.Show(
+                "Are you sure you wish to delete this " + elementType + "? If this element has child nodes, they will also be deleted.",
+                "Confirm delete",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question) != DialogResult.Yes)
+                return;
+
+            deleter();
+        }
+
         /// <summary>
         /// Handles the Click event of the refreshToolStripMenuItem control.
         /// </summary>
