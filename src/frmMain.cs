@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows.Forms;
 using Divan;
@@ -23,26 +24,23 @@ namespace LoveSeat
             public Font Font;
         }
 
-        const string MapTemplate = "function (doc) {\r\n\t\r\n}";
+        readonly Dictionary<string, string> templates = new Dictionary<string, string>
+        {
+            { "map", "function (doc) {\r\n\t\r\n}" },
+            { "reduce", @"function (keys, values, rereduce) {\r\n\t\r\n}" },
+            { "fti", @"function (doc) {\r\n\tvar ret = new Document();\r\n\r\n\treturn ret;\r\n}" },
+            { "show", "function (doc) {\r\n\t\r\n}" },
+            { "list", "function (head, req) {\r\n\t\r\n}" }
+        };
 
-        const string ReduceTemplate =
-@"function (keys, values, rereduce) {
-    
-}";
-        const string IndexTemplate =
-@"function (doc) {
-    var ret = new Document();
-
-    return ret;
-}";
 
         private const string ConfigFile = "loveseat.config";
 
-        TreeNode _contextNode;
-        CouchServer _svr;
-        CouchViewDefinitionBase _currentDefinition;
-        bool _isMap;
-        Settings settings;
+        private TreeNode _contextNode;
+        private TreeNode _currentNode;
+        private CouchServer _svr;
+        private Settings settings;
+        private string buffer;
         
         private bool runningOnMono = Type.GetType("Mono.Runtime") != null;
 
@@ -95,6 +93,10 @@ namespace LoveSeat
             editor.Seperators.Add('.');
             editor.Seperators.Add('-');
             editor.Seperators.Add('+');
+            editor.Seperators.Add('(');
+            editor.Seperators.Add(')');
+            editor.Seperators.Add(';');
+            editor.Seperators.Add('=');
             editor.Seperators.Add('*');
             editor.Seperators.Add('/');
 
@@ -146,8 +148,8 @@ namespace LoveSeat
             try
             {
                 _svr = null;
-                _currentDefinition = null;
-                _isMap = false;
+                _currentNode = null;
+                buffer = null;
                 tvMain.Nodes.Clear();
                 rtSource.Clear();
 
@@ -266,8 +268,8 @@ namespace LoveSeat
 
             if (e.Node.Tag is CouchDatabase)
                 LoadDatabase(e.Node.Tag as CouchDatabase, e.Node);
-            else if (e.Node.Tag is CouchDesignDocument)
-                LoadView(e.Node.Tag as CouchDesignDocument, e.Node);
+            else if (e.Node.Tag is GenericDesignDocument)
+                LoadDesign(e.Node.Tag as GenericDesignDocument, e.Node);
         }
 
         /// <summary>
@@ -279,41 +281,34 @@ namespace LoveSeat
         {
             foreach (var view in couchDatabase.QueryAllDocuments().StartKey("_design").EndKey("_design0").GetResult().RowDocuments())
             {
-                var design = couchDatabase.GetDocument<CouchDesignDocument>(view.Key);
+                var design = couchDatabase.GetDocument<GenericDesignDocument>(view.Key);
                 design.Owner = couchDatabase;
                 CreateDesignNode(design, parent);
             }
         }
 
-        /// <summary>
-        /// Loads the view into the treeview, under the given parent.
-        /// </summary>
-        /// <param name="couchViewDefinition">The couch view definition.</param>
-        /// <param name="parent">The parent.</param>
-        private void LoadView(CouchDesignDocument couchViewDefinition, TreeNode parent)
+        private void LoadDesign(GenericDesignDocument designDoc, TreeNode parent)
         {
-            foreach (var view in couchViewDefinition.Definitions)
+            var viewsNode = CreateViewsNode(parent);
+            foreach (var view in designDoc.Definitions)
             {
-                TreeNode node = CreateViewNode(parent, view);
-                CreateFunctionNode(view, node, "map");
+                TreeNode node = CreateViewNode(viewsNode, view);
+                CreateGenericFunctionNode("map", node, "map");
                 if (!String.IsNullOrEmpty(view.Reduce))
-                    CreateFunctionNode(view, node, "reduce");
+                    CreateGenericFunctionNode("reduce", node, "reduce");
             }
 
-            foreach (var index in couchViewDefinition.LuceneDefinitions)
-            {
-                TreeNode node = CreateFTINode(parent, index);
-                CreateFunctionNode(index, node, "index");
-            }
-        }
+            var ftiNode = CreateIndicesNode(parent);
+            foreach (var index in designDoc.LuceneDefinitions)
+                CreateGenericFunctionNode("fti", ftiNode, index.Name);
 
-        private TreeNode CreateFTINode(TreeNode parent, Divan.Lucene.CouchLuceneViewDefinition index)
-        {
-            var node = parent.Nodes.Add(index.Name);
-            node.Tag = index;
-            node.ImageIndex = 4;
-            node.SelectedImageIndex = 4;
-            return node;
+            var showsNode = CreateShowsNode(parent);
+            foreach (var show in designDoc.Shows)
+                CreateGenericFunctionNode("show", showsNode, show.Name);
+
+            var listsNode = CreateListsNode(parent);
+            foreach (var list in designDoc.Shows)
+                CreateGenericFunctionNode("list", listsNode, list.Name);
         }
 
         /// <summary>
@@ -322,7 +317,7 @@ namespace LoveSeat
         /// <param name="design">The design.</param>
         /// <param name="parent">The parent.</param>
         /// <returns></returns>
-        private TreeNode CreateDesignNode(CouchDesignDocument design, TreeNode parent)
+        private TreeNode CreateDesignNode(GenericDesignDocument design, TreeNode parent)
         {
             var node = parent.Nodes.Add(design.Id);
             node.Nodes.Add(String.Empty);
@@ -333,18 +328,55 @@ namespace LoveSeat
             return node;
         }
 
-        /// <summary>
-        /// Creates a function (map/reduce) node.
-        /// </summary>
-        /// <param name="view">The view.</param>
-        /// <param name="node">The node.</param>
-        /// <param name="function">The name of the function.</param>
-        /// <returns></returns>
-        private TreeNode CreateFunctionNode(CouchViewDefinitionBase view, TreeNode node, string function)
+        private TreeNode CreateViewsNode(TreeNode parent)
         {
-            var functionNode = node.Nodes.Add(function, function);
-            functionNode.Name = function;
-            functionNode.Tag = view;
+            var viewsNode = parent.Nodes.Add("views");
+            viewsNode.Name = "views";
+            viewsNode.Tag = "views";
+            viewsNode.ImageIndex = 2;
+            viewsNode.SelectedImageIndex = 2;
+
+            return viewsNode;
+        }
+
+        private TreeNode CreateIndicesNode(TreeNode parent)
+        {
+            var indicesNode = parent.Nodes.Add("indices");
+            indicesNode.Name = "indices";
+            indicesNode.Tag = "indices";
+            indicesNode.ImageIndex = 2;
+            indicesNode.SelectedImageIndex = 2;
+
+            return indicesNode;
+        }
+
+        private TreeNode CreateShowsNode(TreeNode parent)
+        {
+            var showsNode = parent.Nodes.Add("shows");
+            showsNode.Name = "shows";
+            showsNode.Tag = "shows";
+            showsNode.ImageIndex = 2;
+            showsNode.SelectedImageIndex = 2;
+
+            return showsNode;
+        }
+
+        private TreeNode CreateListsNode(TreeNode parent)
+        {
+            var listsNode = parent.Nodes.Add("lists");
+            listsNode.Name = "lists";
+            listsNode.Tag = "lists";
+            listsNode.ImageIndex = 2;
+            listsNode.SelectedImageIndex = 2;
+
+            return listsNode;
+        }
+
+        private TreeNode CreateGenericFunctionNode(string functionType, TreeNode node, string name)
+        {
+            var functionNode = node.Nodes.Add(name);
+            functionNode.Name = name;
+            functionNode.Tag = functionType;
             functionNode.ImageIndex = 3;
             functionNode.SelectedImageIndex = 3;
 
@@ -359,11 +391,145 @@ namespace LoveSeat
         /// <returns></returns>
         private TreeNode CreateViewNode(TreeNode parent, CouchViewDefinition view)
         {
-            var node = parent.Nodes.Add(view.Name);
+            var node = parent.Nodes.Add(view.Name, view.Name);
             node.Tag = view;
             node.ImageIndex = 2;
             node.SelectedImageIndex = 2;
             return node;
+        }
+
+        private void updateBuffer()
+        {
+            buffer = rtSource.Text;
+        }
+
+        private bool HasBufferChanged()
+        {
+            return (buffer ?? "") != (rtSource.Text ?? "");
+        }
+
+        private T GetMetaElement<T>(TreeNode node) where T: class
+        {
+            if (node == null)
+                return null;
+
+            var doc = node.Tag as T;
+            if (doc == null)
+                return GetMetaElement<T>(node.Parent);
+
+            return doc;
+        }
+
+        private GenericDesignDocument GetDesignDoc(TreeNode node)
+        {
+            return GetMetaElement<GenericDesignDocument>(node);
+        }
+
+        private string GetSourceByNode(TreeNode node)
+        {
+            if (!(node.Tag is string))
+                return String.Empty;
+
+            var designDoc = GetDesignDoc(node);
+            switch (node.Tag as string)
+            {
+                case "map":
+                    return designDoc.Definitions.Where(view => view.Name == node.Parent.Name).FirstOrDefault().Map;
+                case "reduce":
+                    return designDoc.Definitions.Where(view => view.Name == node.Parent.Name).FirstOrDefault().Reduce;
+                case "fti":
+                    return designDoc.LuceneDefinitions.Where(view => view.Name == node.Name).FirstOrDefault().Index;
+                case "show":
+                    return designDoc.Shows.Where(fnc => fnc.Name == node.Name).FirstOrDefault().Function;
+                case "list":
+                    return designDoc.Shows.Where(fnc => fnc.Name == node.Name).FirstOrDefault().Function;
+            }
+
+            return String.Empty;
+        }
+
+        private void SetSourceByNode(TreeNode node, string source)
+        {
+            if (!(node.Tag is string))
+                return;
+
+            var designDoc = GetDesignDoc(node);
+            switch (node.Tag as string)
+            {
+                case "map":
+                    designDoc.Definitions.Where(view => view.Name == node.Parent.Name).FirstOrDefault().Map = source;
+                    break;
+                case "reduce":
+                    designDoc.Definitions.Where(view => view.Name == node.Parent.Name).FirstOrDefault().Reduce = source;
+                    break;
+                case "fti":
+                    var index = designDoc.LuceneDefinitions.Where(idx => idx.Name == node.Name).FirstOrDefault();
+                    if (index == null)
+                        designDoc.AddLuceneView(node.Name, source);
+                    else
+                        index.Index = source;
+                    break;
+                case "show":
+                    var showFunc = designDoc.Shows.Where(fnc => fnc.Name == node.Name).FirstOrDefault();
+                    if (showFunc == null)
+                        designDoc.Shows.Add(new CouchFunctionDefinition { Name = node.Name, Function = source });
+                    else
+                        showFunc.Function = source;
+                    break;
+                case "list":
+                    var listFunc = designDoc.Lists.Where(fnc => fnc.Name == node.Name).FirstOrDefault();
+                    if (listFunc == null)
+                        designDoc.Lists.Add(new CouchFunctionDefinition { Name = node.Name, Function = source });
+                    else
+                        listFunc.Function = source;
+                    break;
+            }
+        }
+
+        private void DeleteSourceByNode(TreeNode node)
+        {
+            if (!(node.Tag is string))
+                return;
+
+            var designDoc = GetDesignDoc(node);
+            switch (node.Tag as string)
+            {
+                case "reduce":
+                    designDoc.Definitions.Where(view => view.Name == node.Parent.Name).FirstOrDefault().Reduce = null;
+                    break;
+                case "fti":
+                    designDoc.RemoveLuceneViewNamed(node.Name);
+                    break;
+                case "show":
+                    designDoc.Shows.Remove(designDoc.Shows.Where(fnc => fnc.Name == node.Name).FirstOrDefault());
+                    break;
+                case "list":
+                    designDoc.Lists.Remove(designDoc.Lists.Where(fnc => fnc.Name == node.Name).FirstOrDefault());
+                    break;
+            }
+        }
+
+        private bool IsFunctionNode(TreeNode node)
+        {
+            if (node == null || !(node.Tag is string))
+                return false;
+
+            switch (node.Tag as string)
+            {
+                case "map":
+                case "reduce":
+                case "fti":
+                case "show":
+                case "list":
+                    return true;
+                default: 
+                    return false;
+            }
+        }
+
+        private void PrepopulateByType(string type)
+        {
+            rtSource.Text = templates[type];
         }
 
         /// <summary>
@@ -373,45 +539,15 @@ namespace LoveSeat
         /// <param name="e">The <see cref="System.EventArgs"/> instance containing the event data.</param>
         private void tvMain_DoubleClick(object sender, EventArgs e)
         {
-            if (tvMain.SelectedNode == null)
+            if (tvMain.SelectedNode == null || !IsFunctionNode(tvMain.SelectedNode))
                 return;
 
-            switch (tvMain.SelectedNode.Name)
-            {
-                case "map":
-                    if (!VerifySave(true))
-                        return;
-                    _isMap = true;
-                    _currentDefinition = (CouchViewDefinitionBase)tvMain.SelectedNode.Tag;
-                    rtSource.Text = ((CouchViewDefinition)_currentDefinition).Map;
+            if (!VerifySave(true))
+                return;
 
-                    if (String.IsNullOrEmpty(rtSource.Text))
-                        rtSource.Text = MapTemplate;
-
-                    break;
-                case "reduce":
-                    if (!VerifySave(true))
-                        return;
-                    _isMap = false;
-                    _currentDefinition = (CouchViewDefinitionBase)tvMain.SelectedNode.Tag;
-                    rtSource.Text = ((CouchViewDefinition)_currentDefinition).Reduce;
-
-                    if (String.IsNullOrEmpty(rtSource.Text))
-                        rtSource.Text = ReduceTemplate;
-
-                    break;
-                case "index":
-                    if (!VerifySave(true))
-                        return;
-                    _isMap = false;
-                    _currentDefinition = (CouchViewDefinitionBase)tvMain.SelectedNode.Tag;
-                    rtSource.Text = ((CouchLuceneViewDefinition)_currentDefinition).Index;
-
-                    if (String.IsNullOrEmpty(rtSource.Text))
-                        rtSource.Text = IndexTemplate;
-
-                    break;
-            }
+            _currentNode = tvMain.SelectedNode;
+            rtSource.Text = GetSourceByNode(tvMain.SelectedNode);
+            updateBuffer();
         }
 
         /// <summary>
@@ -421,36 +557,23 @@ namespace LoveSeat
         /// <returns>whether the save occurred</returns>
         private bool VerifySave(bool prompt)
         {
-            if (_currentDefinition == null || 
-                    (((_currentDefinition is CouchViewDefinition) &&
-                        ((_isMap && (((CouchViewDefinition)_currentDefinition).Map == rtSource.Text)) ||
-                        (!_isMap && (((CouchViewDefinition)_currentDefinition).Reduce == rtSource.Text)))) ||
-                    ((_currentDefinition is CouchLuceneViewDefinition) &&
-                        (((CouchLuceneViewDefinition)_currentDefinition).Index == rtSource.Text))))
+            if (!HasBufferChanged())
             {
-                if (_currentDefinition != null)
-                    toolStripStatusLabel1.Text = String.Format("{0} is up to date.", _currentDefinition.Name);
+                if (_currentNode != null)
+                    toolStripStatusLabel1.Text = String.Format("{0} is up to date.", _currentNode.Name);
+
                 return true;
             }
 
             switch (
-                prompt ? 
-                MessageBox.Show(this, "Do you want to save changes to " + tvMain.SelectedNode.FullPath + "?", "Save Changes?", MessageBoxButtons.YesNoCancel) : 
+                prompt ?
+                MessageBox.Show(this, "Do you want to save changes to " + _currentNode.FullPath + "?", "Save Changes?", MessageBoxButtons.YesNoCancel) : 
                 DialogResult.Yes)
             {
                 case DialogResult.Yes:
-                    if (_currentDefinition is CouchViewDefinition)
-                    {
-                        if (_isMap)
-                            ((CouchViewDefinition)_currentDefinition).Map = rtSource.Text;
-                        else
-                            ((CouchViewDefinition)_currentDefinition).Reduce = rtSource.Text;
-                    }
-                    else
-                        ((CouchLuceneViewDefinition)_currentDefinition).Index = rtSource.Text;
-
-                    _currentDefinition.Doc.Synch();
-                    toolStripStatusLabel1.Text = String.Format("Saved {0}.", _currentDefinition.Name);
+                    SetSourceByNode(_currentNode, rtSource.Text);
+                    GetDesignDoc(_currentNode).Synch();
+                    toolStripStatusLabel1.Text = String.Format("Saved {0}.", _currentNode.Name);
                     break;
                 case DialogResult.Cancel:
                     return false;
@@ -479,7 +602,7 @@ namespace LoveSeat
             if (_contextNode == null)
                 return;
 
-            CreateFunctionNode((CouchViewDefinition)_contextNode.Tag, _contextNode, "reduce");
+            CreateGenericFunctionNode("reduce", _contextNode, "reduce");
         }
 
         /// <summary>
@@ -493,9 +616,7 @@ namespace LoveSeat
 
             addReduceToolStripMenuItem.Visible =
                 (_contextNode != null) &&
-                (_contextNode.Tag is CouchViewDefinition) &&
-                (_contextNode.Name != "map") &&
-                (_contextNode.Name != "reduce") &&
+                (_contextNode.Tag as string == "view") &&
                 (_contextNode.Nodes.Count != 2);
 
             addDesignToolStripMenuItem.Visible =
@@ -504,11 +625,19 @@ namespace LoveSeat
 
             addViewToolStripMenuItem.Visible =
                 (_contextNode != null) &&
-                (_contextNode.Tag is CouchDesignDocument);
+                (_contextNode.Tag as string == "views");
 
             addLuceneIndexToolStripMenuItem.Visible =
                 (_contextNode != null) &&
-                (_contextNode.Tag is CouchDesignDocument);
+                (_contextNode.Tag as string == "indices");
+
+            addShowToolStripMenuItem.Visible =
+                (_contextNode != null) &&
+                (_contextNode.Tag as string == "shows");
+
+            addListToolStripMenuItem.Visible =
+                (_contextNode != null) &&
+                (_contextNode.Tag as string == "lists");
 
             addDatabaseToolStripMenuItem.Visible =
                 (_contextNode != null) &&
@@ -516,8 +645,12 @@ namespace LoveSeat
 
             deleteToolStripMenuItem.Visible =
                 (_contextNode != null) && (
+                (_contextNode.Tag as string == "reduce") ||
+                (_contextNode.Tag as string == "show") ||
+                (_contextNode.Tag as string == "list") ||
+                (_contextNode.Tag as string == "fti") ||
                 (_contextNode.Tag is CouchDatabase) ||
-                (_contextNode.Tag is CouchDesignDocument) ||
+                (_contextNode.Tag is GenericDesignDocument) ||
                 (_contextNode.Tag is CouchViewDefinition) ||
                 (_contextNode.Tag is CouchViewDefinitionBase) ||
                 (_contextNode.Tag is CouchLuceneViewDefinition)
@@ -537,7 +670,7 @@ namespace LoveSeat
 
             ctxSeparator.Visible = (_contextNode != null) && (
                 (_contextNode.Tag is CouchDatabase) ||
-                (_contextNode.Tag is CouchDesignDocument) ||
+                (_contextNode.Tag is GenericDesignDocument) ||
                 (_contextNode.Tag is CouchViewDefinition)
                 );
             ctxSeparator2.Visible = (_contextNode != null) && (_contextNode.Tag is CouchDatabase);
@@ -566,12 +699,13 @@ namespace LoveSeat
                 if (dialog.ShowDialog() != DialogResult.OK)
                     return;
 
-                var view = ((CouchDesignDocument)_contextNode.Tag).AddView(dialog.EnteredName, String.Empty);
+                var view = GetDesignDoc(_contextNode).AddView(dialog.EnteredName, String.Empty);
 
                 var viewNode = CreateViewNode(_contextNode, view);
-                var mapNode = CreateFunctionNode(view, viewNode, "map");
+                var mapNode = CreateGenericFunctionNode("map", viewNode, "map");
 
                 mapNode.EnsureVisible();
+                PrepopulateByType("map");
             }
         }
 
@@ -593,14 +727,13 @@ namespace LoveSeat
                 if (dialog.ShowDialog() != DialogResult.OK)
                     return;
 
-                var design = new CouchDesignDocument(dialog.EnteredName,
+                var design = new GenericDesignDocument(dialog.EnteredName,
                                                      ((CouchDatabase)_contextNode.Tag));
 
                 var designNode = CreateDesignNode(design, _contextNode);
                 designNode.EnsureVisible();
             }
         }
-
 
         private void addLuceneIndexToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -615,12 +748,10 @@ namespace LoveSeat
                 if (dialog.ShowDialog() != DialogResult.OK)
                     return;
 
-                var view = ((CouchDesignDocument)_contextNode.Tag).AddLuceneView(dialog.EnteredName, String.Empty);
-
-                var viewNode = CreateFTINode(_contextNode, view);
-                var indexNode = CreateFunctionNode(view, viewNode, "index");
-
+                var indexNode = CreateGenericFunctionNode("fti", _contextNode, dialog.EnteredName);
+                
                 indexNode.EnsureVisible();
+                PrepopulateByType("fti");
             }
         }
 
@@ -643,6 +774,49 @@ namespace LoveSeat
             }
         }
 
+
+        private void addShowToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (_contextNode == null)
+                return;
+
+            if (hasOnlyDummyNode(_contextNode))
+                _contextNode.Nodes.Clear();
+
+            using (var dialog = new dlgName("Show name", "New Show Function"))
+            {
+                if (dialog.ShowDialog() != DialogResult.OK)
+                    return;
+
+                GetDesignDoc(_contextNode).Shows.Add(new CouchFunctionDefinition { Name = dialog.EnteredName });
+                var showNode = CreateGenericFunctionNode("show", _contextNode, dialog.EnteredName);
+
+                showNode.EnsureVisible();
+                PrepopulateByType("show");
+            }
+        }
+
+        private void addListToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (_contextNode == null)
+                return;
+
+            if (hasOnlyDummyNode(_contextNode))
+                _contextNode.Nodes.Clear();
+
+            using (var dialog = new dlgName("List Name", "New List Function"))
+            {
+                if (dialog.ShowDialog() != DialogResult.OK)
+                    return;
+
+                GetDesignDoc(_contextNode).Lists.Add(new CouchFunctionDefinition { Name = dialog.EnteredName });
+                var listNode = CreateGenericFunctionNode("list", _contextNode, dialog.EnteredName);
+
+                listNode.EnsureVisible();
+                PrepopulateByType("list");
+            }
+        }
+
         private void deleteToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (_contextNode == null)
@@ -659,16 +833,16 @@ namespace LoveSeat
                                   LoadServer(tstServer.Text);
                               };
             }
-            else if (_contextNode.Tag is CouchDesignDocument)
+            else if (_contextNode.Tag is GenericDesignDocument)
             {
                 elementType = "design document";
                 deleter = () =>
                 {
-                    ((CouchDesignDocument)_contextNode.Tag).Owner.DeleteDocument((CouchDesignDocument)_contextNode.Tag);
+                    ((GenericDesignDocument)_contextNode.Tag).Owner.DeleteDocument((GenericDesignDocument)_contextNode.Tag);
                     _contextNode.Remove();
                 };
             }
-            else if (_contextNode.Tag is CouchViewDefinition && _contextNode.Parent.Tag is CouchDesignDocument)
+            else if (_contextNode.Tag is CouchViewDefinition)
             {
                 elementType = "view";
                 deleter = () =>
@@ -679,34 +853,10 @@ namespace LoveSeat
                     doc.Synch();
                 };
             }
-            else if (_contextNode.Tag is CouchViewDefinition)
+            else if (IsFunctionNode(_contextNode))
             {
-                if (_contextNode.Name == "map")
-                {
-                    MessageBox.Show("Map nodes are required for couch views. If you wish to remove the map node, please remove the parent view node instead.");
-                    return;
-                }
-                if (_contextNode.Name == "reduce")
-                {
-                    elementType = "reduce function";
-                    deleter = () =>
-                    {
-                        ((CouchViewDefinition)_contextNode.Tag).Reduce = null;
-                        _contextNode.Remove();
-                        ((CouchViewDefinition)_contextNode.Tag).Doc.Synch();
-                    };
-                }
-            }
-            else if (_contextNode.Tag is CouchLuceneViewDefinition)
-            {
-                elementType = "lucene index";
-                deleter = () =>
-                {
-                    var doc = ((CouchLuceneViewDefinition)_contextNode.Tag).Doc;
-                    doc.RemoveLuceneView((CouchLuceneViewDefinition)_contextNode.Tag);
-                    _contextNode.Remove();
-                    doc.Synch();
-                };
+                elementType = _contextNode.Tag.ToString();
+                deleter = () => DeleteSourceByNode(_contextNode);
             }
 
             if (deleter == null)
@@ -793,7 +943,7 @@ namespace LoveSeat
 
         private void cmdRun_Click(object sender, EventArgs e)
         {
-            if (_currentDefinition == null)
+            if (_currentNode == null)
                 return;
 
             if (!VerifySave(true))
@@ -802,14 +952,14 @@ namespace LoveSeat
                 return;
             }
 
-            var viewDefinition = _currentDefinition as CouchViewDefinition;
+            var viewDefinition = GetMetaElement<CouchViewDefinition>(_currentNode);
             tvResults.Nodes.Clear();
 
-            var root = tvResults.Nodes.Add(viewDefinition.Path() + "/" + txtParams.Text);
 
             if (viewDefinition == null)
             {
-                var luceneDefinition = _currentDefinition as CouchLuceneViewDefinition;
+                var luceneDefinition = GetDesignDoc(_currentNode).LuceneDefinitions.Where(view => view.Name == _currentNode.Name).FirstOrDefault();
+                var root = tvResults.Nodes.Add(luceneDefinition.Path() + "/" + txtParams.Text);
                 var luceneQuery = luceneDefinition.Query();
                 if (!String.IsNullOrEmpty(txtParams.Text))
                     foreach (var optionSet in txtParams.Text.Split('&'))
@@ -830,6 +980,7 @@ namespace LoveSeat
             }
             else
             {
+                var root = tvResults.Nodes.Add(viewDefinition.Path() + "/" + txtParams.Text);
                 var viewQuery = viewDefinition.Query();
                 if (!String.IsNullOrEmpty(txtParams.Text))
                     foreach (var optionSet in txtParams.Text.Split('&'))
@@ -908,7 +1059,7 @@ namespace LoveSeat
 
                 foreach (var view in sourceDb.QueryAllDocuments().StartKey("_design").EndKey("_designZZZZZZZZZZZZZZZZZ").GetResult().RowDocuments())
                 {
-                    var design = sourceDb.GetDocument<CouchDesignDocument>(view.Key);
+                    var design = sourceDb.GetDocument<GenericDesignDocument>(view.Key);
                     
                     // need to make sure to overwrite the target
                     if (targetDb.HasDocument(design.Id))
@@ -931,7 +1082,7 @@ namespace LoveSeat
 
             foreach (var view in sourceDb.QueryAllDocuments().StartKey("_design").EndKey("_designZZZZZZZZZZZZZZZZZ").GetResult().RowDocuments())
             {
-                var design = sourceDb.GetDocument<CouchDesignDocument>(view.Key);
+                var design = sourceDb.GetDocument<GenericDesignDocument>(view.Key);
 
                 using (var streamWriter = new StreamWriter(File.OpenWrite(Path.Combine(folderBrowserDialog1.SelectedPath, design.Id.Substring(8) + ".js"))))
                 {
@@ -957,7 +1108,7 @@ namespace LoveSeat
             {
                 using (var reader = new StreamReader(File.OpenRead(file)))
                 {
-                    var design = new CouchDesignDocument();
+                    var design = new GenericDesignDocument();
                     design.ReadJson((JObject)JToken.ReadFrom(new JsonTextReader(reader)));
                     
                     // need to make sure to overwrite the target
