@@ -1,7 +1,21 @@
-﻿using System;
+﻿/**
+ *   Copyright 2010 Alex Pedenko
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
+
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Divan;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -49,11 +63,11 @@ namespace LoveSeat
 
             if (obj["shows"] as JObject != null)
                 foreach (var prop in ((JObject)obj["shows"]).Properties())
-                    Shows.Add(new CouchFunctionDefinition { Name = prop.Name, Function = prop.Value<string>() });
+                    Shows.Add(new CouchFunctionDefinition { Name = prop.Name, Function = obj["shows"][prop.Name].Value<string>() });
 
             if (obj["lists"] as JObject != null)
                 foreach (var prop in ((JObject)obj["lists"]).Properties())
-                    Shows.Add(new CouchFunctionDefinition { Name = prop.Name, Function = prop.Value<string>() });
+                    Lists.Add(new CouchFunctionDefinition { Name = prop.Name, Function = obj["lists"][prop.Name].Value<string>() });
         }
 
         private void writeList(IList<CouchFunctionDefinition> list, string name, JsonWriter writer)

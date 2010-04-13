@@ -45,9 +45,9 @@
             // 
             // txtServer
             // 
-            this.txtServer.Location = new System.Drawing.Point(79, 6);
+            this.txtServer.Location = new System.Drawing.Point(113, 6);
             this.txtServer.Name = "txtServer";
-            this.txtServer.Size = new System.Drawing.Size(286, 20);
+            this.txtServer.Size = new System.Drawing.Size(252, 20);
             this.txtServer.TabIndex = 1;
             // 
             // cmdCancel

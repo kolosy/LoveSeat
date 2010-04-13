@@ -1,4 +1,20 @@
-﻿using System;
+﻿/**
+ *   Copyright 2010 Alex Pedenko
+ *
+ *   Licensed under the Apache License, Version 2.0 (the "License");
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows.Forms;
@@ -12,6 +28,7 @@ using UrielGuy.SyntaxHighlightingTextBox;
 using System.Drawing;
 using System.Linq;
 using System.Net;
+using System.Diagnostics;
 
 namespace LoveSeat
 {
@@ -29,7 +46,7 @@ namespace LoveSeat
             { "map", "function (doc) {\r\n\t\r\n}" },
             { "reduce", @"function (keys, values, rereduce) {\r\n\t\r\n}" },
             { "fti", @"function (doc) {\r\n\tvar ret = new Document();\r\n\r\n\treturn ret;\r\n}" },
-            { "show", "function (doc) {\r\n\t\r\n}" },
+            { "show", "function (doc, req) {\r\n\t\r\n}" },
             { "list", "function (head, req) {\r\n\t\r\n}" }
         };
 
@@ -307,7 +324,7 @@ namespace LoveSeat
                 CreateGenericFunctionNode("show", showsNode, show.Name);
 
             var listsNode = CreateListsNode(parent);
-            foreach (var list in designDoc.Shows)
+            foreach (var list in designDoc.Lists)
                 CreateGenericFunctionNode("list", listsNode, list.Name);
         }
 
@@ -333,8 +350,8 @@ namespace LoveSeat
             var viewsNode = parent.Nodes.Add("views");
             viewsNode.Name = "views";
             viewsNode.Tag = "views";
-            viewsNode.ImageIndex = 2;
-            viewsNode.SelectedImageIndex = 2;
+            viewsNode.ImageIndex = 8;
+            viewsNode.SelectedImageIndex = 8;
 
             return viewsNode;
         }
@@ -344,8 +361,8 @@ namespace LoveSeat
             var indicesNode = parent.Nodes.Add("indices");
             indicesNode.Name = "indices";
             indicesNode.Tag = "indices";
-            indicesNode.ImageIndex = 2;
-            indicesNode.SelectedImageIndex = 2;
+            indicesNode.ImageIndex = 4;
+            indicesNode.SelectedImageIndex = 4;
 
             return indicesNode;
         }
@@ -355,8 +372,8 @@ namespace LoveSeat
             var showsNode = parent.Nodes.Add("shows");
             showsNode.Name = "shows";
             showsNode.Tag = "shows";
-            showsNode.ImageIndex = 2;
-            showsNode.SelectedImageIndex = 2;
+            showsNode.ImageIndex = 6;
+            showsNode.SelectedImageIndex = 6;
 
             return showsNode;
         }
@@ -366,8 +383,8 @@ namespace LoveSeat
             var listsNode = parent.Nodes.Add("lists");
             listsNode.Name = "lists";
             listsNode.Tag = "lists";
-            listsNode.ImageIndex = 2;
-            listsNode.SelectedImageIndex = 2;
+            listsNode.ImageIndex = 7;
+            listsNode.SelectedImageIndex = 7;
 
             return listsNode;
         }
@@ -442,7 +459,7 @@ namespace LoveSeat
                 case "show":
                     return designDoc.Shows.Where(fnc => fnc.Name == node.Name).FirstOrDefault().Function;
                 case "list":
-                    return designDoc.Shows.Where(fnc => fnc.Name == node.Name).FirstOrDefault().Function;
+                    return designDoc.Lists.Where(fnc => fnc.Name == node.Name).FirstOrDefault().Function;
             }
 
             return String.Empty;
@@ -574,6 +591,7 @@ namespace LoveSeat
                     SetSourceByNode(_currentNode, rtSource.Text);
                     GetDesignDoc(_currentNode).Synch();
                     toolStripStatusLabel1.Text = String.Format("Saved {0}.", _currentNode.Name);
+                    updateBuffer();
                     break;
                 case DialogResult.Cancel:
                     return false;
@@ -616,7 +634,7 @@ namespace LoveSeat
 
             addReduceToolStripMenuItem.Visible =
                 (_contextNode != null) &&
-                (_contextNode.Tag as string == "view") &&
+                (_contextNode.Tag is CouchViewDefinition) &&
                 (_contextNode.Nodes.Count != 2);
 
             addDesignToolStripMenuItem.Visible =
@@ -676,7 +694,7 @@ namespace LoveSeat
             ctxSeparator2.Visible = (_contextNode != null) && (_contextNode.Tag is CouchDatabase);
         }
 
-        private bool hasOnlyDummyNode(TreeNode node)
+        private bool HasOnlyDummyNode(TreeNode node)
         {
             return node.Nodes.Count == 1 && String.Empty.Equals(node.Nodes[0].Text);
         }
@@ -691,7 +709,7 @@ namespace LoveSeat
             if (_contextNode == null)
                 return;
 
-            if (hasOnlyDummyNode(_contextNode))
+            if (HasOnlyDummyNode(_contextNode))
                 _contextNode.Nodes.Clear();
 
             using (var dialog = new dlgName("View name", "New View"))
@@ -705,6 +723,7 @@ namespace LoveSeat
                 var mapNode = CreateGenericFunctionNode("map", viewNode, "map");
 
                 mapNode.EnsureVisible();
+                _currentNode = mapNode;
                 PrepopulateByType("map");
             }
         }
@@ -719,7 +738,7 @@ namespace LoveSeat
             if (_contextNode == null)
                 return;
 
-            if (hasOnlyDummyNode(_contextNode))
+            if (HasOnlyDummyNode(_contextNode))
                 _contextNode.Nodes.Clear();
 
             using (var dialog = new dlgName("Design name", "New Design"))
@@ -740,7 +759,7 @@ namespace LoveSeat
             if (_contextNode == null)
                 return;
 
-            if (hasOnlyDummyNode(_contextNode))
+            if (HasOnlyDummyNode(_contextNode))
                 _contextNode.Nodes.Clear();
 
             using (var dialog = new dlgName("Index name", "New Index"))
@@ -751,6 +770,7 @@ namespace LoveSeat
                 var indexNode = CreateGenericFunctionNode("fti", _contextNode, dialog.EnteredName);
                 
                 indexNode.EnsureVisible();
+                _currentNode = indexNode;
                 PrepopulateByType("fti");
             }
         }
@@ -761,7 +781,7 @@ namespace LoveSeat
             if (_contextNode == null)
                 return;
 
-            if (hasOnlyDummyNode(_contextNode))
+            if (HasOnlyDummyNode(_contextNode))
                 _contextNode.Nodes.Clear();
 
             using (var dialog = new dlgName("Database name", "New Database"))
@@ -780,7 +800,7 @@ namespace LoveSeat
             if (_contextNode == null)
                 return;
 
-            if (hasOnlyDummyNode(_contextNode))
+            if (HasOnlyDummyNode(_contextNode))
                 _contextNode.Nodes.Clear();
 
             using (var dialog = new dlgName("Show name", "New Show Function"))
@@ -792,6 +812,7 @@ namespace LoveSeat
                 var showNode = CreateGenericFunctionNode("show", _contextNode, dialog.EnteredName);
 
                 showNode.EnsureVisible();
+                _currentNode = showNode;
                 PrepopulateByType("show");
             }
         }
@@ -801,7 +822,7 @@ namespace LoveSeat
             if (_contextNode == null)
                 return;
 
-            if (hasOnlyDummyNode(_contextNode))
+            if (HasOnlyDummyNode(_contextNode))
                 _contextNode.Nodes.Clear();
 
             using (var dialog = new dlgName("List Name", "New List Function"))
@@ -813,6 +834,7 @@ namespace LoveSeat
                 var listNode = CreateGenericFunctionNode("list", _contextNode, dialog.EnteredName);
 
                 listNode.EnsureVisible();
+                _currentNode = listNode;
                 PrepopulateByType("list");
             }
         }
@@ -855,8 +877,14 @@ namespace LoveSeat
             }
             else if (IsFunctionNode(_contextNode))
             {
-                elementType = _contextNode.Tag.ToString();
-                deleter = () => DeleteSourceByNode(_contextNode);
+                elementType = _contextNode.Tag.ToString() + " function";
+                deleter = () =>
+                {
+                    var doc = GetDesignDoc(_contextNode);
+                    DeleteSourceByNode(_contextNode);
+                    _contextNode.Remove();
+                    doc.Synch();
+                };
             }
 
             if (deleter == null)
@@ -952,58 +980,120 @@ namespace LoveSeat
                 return;
             }
 
-            var viewDefinition = GetMetaElement<CouchViewDefinition>(_currentNode);
-            tvResults.Nodes.Clear();
-
-
-            if (viewDefinition == null)
+            var designDoc = GetDesignDoc(_currentNode);
+            switch (_currentNode.Tag as string)
             {
-                var luceneDefinition = GetDesignDoc(_currentNode).LuceneDefinitions.Where(view => view.Name == _currentNode.Name).FirstOrDefault();
-                var root = tvResults.Nodes.Add(luceneDefinition.Path() + "/" + txtParams.Text);
-                var luceneQuery = luceneDefinition.Query();
-                if (!String.IsNullOrEmpty(txtParams.Text))
-                    foreach (var optionSet in txtParams.Text.Split('&'))
+                case "show":
+                    if (String.IsNullOrEmpty(txtParams.Text))
                     {
-                        var option = optionSet.Split('&');
-                        luceneQuery.Options[option[0]] = option[1];
+                        MessageBox.Show("Show queries require a document id to show (\"docid[?parameter=value]\")", "Query parameter required", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                        return;
+                    }
+                    Process.Start(
+                        "http://" + 
+                        _svr.Host + ":" + _svr.Port + "/" +
+                        designDoc.Owner.Name + "/" +
+                        designDoc.Id + "/_show/" +
+                        _currentNode.Name + "/" +
+                        txtParams.Text);
+                    break;
+                case "list":
+                    if (String.IsNullOrEmpty(txtParams.Text))
+                    {
+                        MessageBox.Show("List queries require a view to show (\"viewname[?parameter=value]\")", "Query parameter required", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                        return;
+                    }
+                    Process.Start(
+                        "http://" +
+                        _svr.Host + ":" + _svr.Port + "/" +
+                        designDoc.Owner.Name + "/" +
+                        designDoc.Id + "/_list/" +
+                        _currentNode.Name + "/" +
+                        txtParams.Text);
+                    break;
+                case "map":
+                case "reduce":
+                case "fti":
+                    var viewDefinition = GetMetaElement<CouchViewDefinition>(_currentNode);
+                    tvResults.Nodes.Clear();
+
+                    if (viewDefinition == null)
+                    {
+                        var luceneDefinition =
+                            designDoc.LuceneDefinitions.Where(view => view.Name == _currentNode.Name).
+                                FirstOrDefault();
+                        if (!RunLuceneQuery(luceneDefinition))
+                            return;
+                    }
+                    else if (!RunView(viewDefinition))
+                        return;
+
+                    ShowResults();
+                    break;
+            }
+        }
+
+        private bool RunView(CouchViewDefinition viewDefinition)
+        {
+            var root = tvResults.Nodes.Add(viewDefinition.Path() + "/" + txtParams.Text);
+            var viewQuery = viewDefinition.Query();
+            if (!String.IsNullOrEmpty(txtParams.Text))
+                foreach (var optionSet in txtParams.Text.Split('&'))
+                {
+                    var option = optionSet.Split('=');
+                    if (option.Length != 2)
+                    {
+                        MessageBox.Show(txtParams.Text + " is not a valid view query string (needs to be in the form name=value[&name2=value2]).", "Invalid query", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                        return false;
                     }
 
-                try
-                {
-                    ShowResult(root, luceneQuery.GetResult().result, null);
+                    viewQuery.Options[option[0]] = option[1];
                 }
-                catch (Exception ex)
-                {
-                    root.Nodes.Add("Error: " + ex.Message);
-                    MessageBox.Show(ex.ToString(), "Exception running view", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-            }
-            else
+
+            try
             {
-                var root = tvResults.Nodes.Add(viewDefinition.Path() + "/" + txtParams.Text);
-                var viewQuery = viewDefinition.Query();
-                if (!String.IsNullOrEmpty(txtParams.Text))
-                    foreach (var optionSet in txtParams.Text.Split('&'))
-                    {
-                        var option = optionSet.Split('=');
-                        if (option.Length != 2)
-                            throw new Exception(txtParams.Text + " is not a valid view query string.");
-
-                        viewQuery.Options[option[0]] = option[1];
-                    }
-
-                try
-                {
-                    ShowResult(root, viewQuery.GetResult().result, null);
-                }
-                catch (Exception ex)
-                {
-                    root.Nodes.Add("Error: " + ex.Message);
-                    MessageBox.Show(ex.ToString(), "Exception running view", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
+                ShowResult(root, viewQuery.GetResult().result, null);
+            }
+            catch (Exception ex)
+            {
+                root.Nodes.Add("Error: " + ex.Message);
+                MessageBox.Show(ex.ToString(), "Exception running view", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
             }
 
-            ShowResults();
+            return true;
+        }
+
+        private bool RunLuceneQuery(CouchLuceneViewDefinition luceneDefinition)
+        {
+            var root = tvResults.Nodes.Add(luceneDefinition.Path() + "/" + txtParams.Text);
+            var luceneQuery = luceneDefinition.Query();
+                
+            if (String.IsNullOrEmpty(txtParams.Text) || !txtParams.Text.Contains("q="))
+            {
+                MessageBox.Show("FTI queries need a query string parameter (q=\"foo\")", "Query parameter required", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return false;
+            }
+
+            foreach (var optionSet in txtParams.Text.Split('&'))
+            {
+                var option = optionSet.Split('=');
+                luceneQuery.Options[option[0]] = option[1];
+            }
+
+            try
+            {
+                ShowResult(root, luceneQuery.GetResult().result, null);
+            }
+            catch (Exception ex)
+            {
+                root.Nodes.Add("Error: " + ex.Message);
+                MessageBox.Show(ex.ToString(), "Exception running fti", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                return false;
+            }
+
+            return true;
         }
 
         private void ShowResults()
@@ -1145,6 +1235,11 @@ namespace LoveSeat
 
             // trigger the highlighting
             rtSource.Text += "";
+        }
+
+        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            new frmAbout().ShowDialog(this);
         }
     }
 }
