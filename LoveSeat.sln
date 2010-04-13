@@ -3,6 +3,10 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoveSeat", "src\LoveSeat.csproj", "{EA3D0E42-C366-41C3-8198-95C5D11981F6}"
 EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Installer", "Installer\Installer.vdproj", "{7008493B-11B4-4907-8AE2-6764BA6C53AA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{EDE8B29F-F665-4584-8537-32C77A40EE7D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -13,6 +17,8 @@ Global
 		{EA3D0E42-C366-41C3-8198-95C5D11981F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EA3D0E42-C366-41C3-8198-95C5D11981F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EA3D0E42-C366-41C3-8198-95C5D11981F6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7008493B-11B4-4907-8AE2-6764BA6C53AA}.Debug|Any CPU.ActiveCfg = Debug
+		{7008493B-11B4-4907-8AE2-6764BA6C53AA}.Release|Any CPU.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
