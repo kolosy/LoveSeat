@@ -17,8 +17,8 @@ Current features
 * Import all .js files on disk into a database as design docs
 * Clone docs in one database to another (deploy from local dev to remote prod)
 * Syntax highlighting (windows javascript views only)
+* Support for _show and _list 
 
 Coming soon
 -------------
-* Support for _show and _list 
 * Local view debugging and step-through
