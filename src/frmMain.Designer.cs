@@ -1,4 +1,4 @@
-﻿namespace LoveSeat
+namespace LoveSeat
 {
     partial class FrmMain
     {

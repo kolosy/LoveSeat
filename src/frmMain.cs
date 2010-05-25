@@ -1,4 +1,4 @@
-﻿/**
+/**
  *   Copyright 2010 Alex Pedenko
  *
  *   Licensed under the Apache License, Version 2.0 (the "License");
@@ -44,8 +44,8 @@ namespace LoveSeat
         readonly Dictionary<string, string> templates = new Dictionary<string, string>
         {
             { "map", "function (doc) {\r\n\t\r\n}" },
-            { "reduce", @"function (keys, values, rereduce) {\r\n\t\r\n}" },
-            { "fti", @"function (doc) {\r\n\tvar ret = new Document();\r\n\r\n\treturn ret;\r\n}" },
+            { "reduce", "function (keys, values, rereduce) {\r\n\t\r\n}" },
+            { "fti", "function (doc) {\r\n\tvar ret = new Document();\r\n\r\n\treturn ret;\r\n}" },
             { "show", "function (doc, req) {\r\n\t\r\n}" },
             { "list", "function (head, req) {\r\n\t\r\n}" }
         };
@@ -73,6 +73,8 @@ namespace LoveSeat
             // current highlighting editor implementation doesn't play nice with mono
             if (!runningOnMono)
                 ConfigureHighlightingEditor();
+			else
+				this.Icon = null;
         }
 
         /// <summary>
