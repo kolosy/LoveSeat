@@ -204,18 +204,30 @@ namespace LoveSeat
 
         private CouchServer CreateServer(string[] parts)
         {
+            string host;
+            int port = 5984;
+            string username = txtUsername.Text;
+            string password = txtPassword.Text;
+
             switch (parts.Length)
             {
                 case 1:
-                    return new CouchServer(parts[0]);
+                    host = parts[0];
+                    break;
                 case 2:
-                    return new CouchServer(parts[0], Convert.ToInt32(parts[1]));
+                    host = parts[0];
+                    port = Convert.ToInt32(parts[1]);
+                    break;
                 case 3:
-                    return new CouchServer(parts[1].TrimStart('/'), Convert.ToInt32(parts[2]));
+                    host = parts[1].TrimStart('/');
+                    port = Convert.ToInt32(parts[2]);
+                    break;
                 default:
                     MessageBox.Show(String.Format("{0} is not a recognized URL", parts[0]), "Can't connect", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return null;
             }
+
+            return new CouchServer(host, port, username, password);
         }
 
         private void SaveSettings(Settings settings)
@@ -298,11 +310,18 @@ namespace LoveSeat
         /// <param name="parent">The parent.</param>
         private void LoadDatabase(CouchDatabase couchDatabase, TreeNode parent)
         {
-            foreach (var view in couchDatabase.QueryAllDocuments().StartKey("_design").EndKey("_design0").GetResult().RowDocuments())
+            try
             {
-                var design = couchDatabase.GetDocument<GenericDesignDocument>(view.Key);
-                design.Owner = couchDatabase;
-                CreateDesignNode(design, parent);
+                foreach (var view in couchDatabase.QueryAllDocuments().StartKey("_design").EndKey("_design0").GetResult().RowDocuments())
+                {
+                    var design = couchDatabase.GetDocument<GenericDesignDocument>(view.Key);
+                    design.Owner = couchDatabase;
+                    CreateDesignNode(design, parent);
+                }
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message, "Error Loading Database", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -964,6 +983,12 @@ namespace LoveSeat
             }
             else
                 settings = new Settings();
+
+            
+            TextBox tb = txtPassword.Control as TextBox;
+            if (tb != null)
+                tb.PasswordChar = '*';
+            
         }
 
         private void cmdResults_CheckedChanged(object sender, EventArgs e)
