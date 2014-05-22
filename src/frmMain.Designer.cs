@@ -59,6 +59,9 @@ namespace LoveSeat
             this.contextMenuStrip2 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.collapseAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.expandAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.menuStrip1 = new System.Windows.Forms.MenuStrip();
+            this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStrip2 = new System.Windows.Forms.ToolStrip();
             this.toolStripLabel2 = new System.Windows.Forms.ToolStripLabel();
             this.txtParams = new System.Windows.Forms.ToolStripTextBox();
@@ -74,9 +77,10 @@ namespace LoveSeat
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
             this.folderBrowserDialog1 = new System.Windows.Forms.FolderBrowserDialog();
             this.fontDialog1 = new System.Windows.Forms.FontDialog();
-            this.menuStrip1 = new System.Windows.Forms.MenuStrip();
-            this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.txtUsername = new System.Windows.Forms.ToolStripTextBox();
+            this.txtPassword = new System.Windows.Forms.ToolStripTextBox();
+            this.toolStripLabel3 = new System.Windows.Forms.ToolStripLabel();
+            this.toolStripLabel4 = new System.Windows.Forms.ToolStripLabel();
             this.contextMenuStrip1.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.toolStripContainer1.BottomToolStripPanel.SuspendLayout();
@@ -91,9 +95,9 @@ namespace LoveSeat
             this.splitContainer2.SuspendLayout();
             this.contextMenuStrip3.SuspendLayout();
             this.contextMenuStrip2.SuspendLayout();
+            this.menuStrip1.SuspendLayout();
             this.toolStrip2.SuspendLayout();
             this.toolStrip1.SuspendLayout();
-            this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // contextMenuStrip1
@@ -377,6 +381,32 @@ namespace LoveSeat
             this.expandAllToolStripMenuItem.Text = "Expand All";
             this.expandAllToolStripMenuItem.Click += new System.EventHandler(this.expandAllToolStripMenuItem_Click);
             // 
+            // menuStrip1
+            // 
+            this.menuStrip1.Dock = System.Windows.Forms.DockStyle.None;
+            this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.helpToolStripMenuItem});
+            this.menuStrip1.Location = new System.Drawing.Point(0, 0);
+            this.menuStrip1.Name = "menuStrip1";
+            this.menuStrip1.Size = new System.Drawing.Size(1017, 24);
+            this.menuStrip1.TabIndex = 5;
+            this.menuStrip1.Text = "menuStrip1";
+            // 
+            // helpToolStripMenuItem
+            // 
+            this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.aboutToolStripMenuItem});
+            this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
+            this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
+            this.helpToolStripMenuItem.Text = "Help";
+            // 
+            // aboutToolStripMenuItem
+            // 
+            this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(107, 22);
+            this.aboutToolStripMenuItem.Text = "About";
+            this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
+            // 
             // toolStrip2
             // 
             this.toolStrip2.Dock = System.Windows.Forms.DockStyle.None;
@@ -445,10 +475,14 @@ namespace LoveSeat
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripLabel1,
             this.tstServer,
-            this.cmdOpen});
+            this.cmdOpen,
+            this.toolStripLabel3,
+            this.txtUsername,
+            this.toolStripLabel4,
+            this.txtPassword});
             this.toolStrip1.Location = new System.Drawing.Point(3, 49);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(476, 25);
+            this.toolStrip1.Size = new System.Drawing.Size(828, 25);
             this.toolStrip1.TabIndex = 3;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -483,31 +517,29 @@ namespace LoveSeat
             // 
             this.saveFileDialog1.Filter = "Javascript Files|*.js|All Files|*.*";
             // 
-            // menuStrip1
+            // txtUsername
             // 
-            this.menuStrip1.Dock = System.Windows.Forms.DockStyle.None;
-            this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.helpToolStripMenuItem});
-            this.menuStrip1.Location = new System.Drawing.Point(0, 0);
-            this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(1017, 24);
-            this.menuStrip1.TabIndex = 5;
-            this.menuStrip1.Text = "menuStrip1";
+            this.txtUsername.Name = "txtUsername";
+            this.txtUsername.Size = new System.Drawing.Size(100, 25);
+            this.txtUsername.KeyUp += new System.Windows.Forms.KeyEventHandler(this.tstServer_KeyUp);
             // 
-            // helpToolStripMenuItem
+            // txtPassword
             // 
-            this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.aboutToolStripMenuItem});
-            this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
-            this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
-            this.helpToolStripMenuItem.Text = "Help";
+            this.txtPassword.Name = "txtPassword";
+            this.txtPassword.Size = new System.Drawing.Size(100, 25);
+            this.txtPassword.KeyUp += new System.Windows.Forms.KeyEventHandler(this.tstServer_KeyUp);
             // 
-            // aboutToolStripMenuItem
+            // toolStripLabel3
             // 
-            this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.aboutToolStripMenuItem.Text = "About";
-            this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
+            this.toolStripLabel3.Name = "toolStripLabel3";
+            this.toolStripLabel3.Size = new System.Drawing.Size(60, 22);
+            this.toolStripLabel3.Text = "Username";
+            // 
+            // toolStripLabel4
+            // 
+            this.toolStripLabel4.Name = "toolStripLabel4";
+            this.toolStripLabel4.Size = new System.Drawing.Size(57, 22);
+            this.toolStripLabel4.Text = "Password";
             // 
             // FrmMain
             // 
@@ -520,10 +552,10 @@ namespace LoveSeat
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "FrmMain";
             this.Text = "LoveSeat";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FrmMain_FormClosing);
             this.Load += new System.EventHandler(this.FrmMain_Load);
             this.Shown += new System.EventHandler(this.FrmMain_Shown);
             this.KeyUp += new System.Windows.Forms.KeyEventHandler(this.frmMain_KeyUp);
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FrmMain_FormClosing);
             this.contextMenuStrip1.ResumeLayout(false);
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
@@ -542,12 +574,12 @@ namespace LoveSeat
             this.splitContainer2.ResumeLayout(false);
             this.contextMenuStrip3.ResumeLayout(false);
             this.contextMenuStrip2.ResumeLayout(false);
+            this.menuStrip1.ResumeLayout(false);
+            this.menuStrip1.PerformLayout();
             this.toolStrip2.ResumeLayout(false);
             this.toolStrip2.PerformLayout();
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
-            this.menuStrip1.ResumeLayout(false);
-            this.menuStrip1.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -601,6 +633,10 @@ namespace LoveSeat
         private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
+        private System.Windows.Forms.ToolStripLabel toolStripLabel3;
+        private System.Windows.Forms.ToolStripTextBox txtUsername;
+        private System.Windows.Forms.ToolStripLabel toolStripLabel4;
+        private System.Windows.Forms.ToolStripTextBox txtPassword;
     }
 }
 
